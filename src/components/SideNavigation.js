@@ -3,7 +3,7 @@ import React from "react";
 class SideNavigator extends React.Component {
   render() {
     const element = (
-      <div className="SideNavigator">
+      <div className="SideNavigation">
         <div>
           <button onClick={() => this.props.visibleChange(false)}>Test</button>
         </div>

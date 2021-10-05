@@ -1,17 +1,18 @@
-.novel_item{
-    display: flex;
-    flex-direction: row;   
-    flex-wrap: nowrap;
+.novel_item {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  font-size: 32px;
 }
-.novel_cover{
-    flex:2;
+.novel_cover {
+  flex: 4;
 }
-.novel_cover > img{
-    max-width:100%;
-    max-height: 100%;
+.novel_cover > img {
+  max-width: 100%;
+  max-height: 100%;
 }
-.novel_information{
-    margin-left: 20px;
-    flex:8;
-    text-align: left;
+.novel_information {
+  margin-left: 20px;
+  flex: 6;
+  text-align: left;
 }
