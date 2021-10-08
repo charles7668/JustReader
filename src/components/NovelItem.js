@@ -7,12 +7,20 @@ class NovelItem extends React.Component {
         <div className="novel_cover">
           <img
             src="https://user-images.githubusercontent.com/12591890/50744458-f3b01980-11e8-11e9-940b-2cc6af0906a7.gif"
-            alt="test"
+            alt="error"
           ></img>
         </div>
         <div className="novel_information">
-          <p>test</p>
+          <ul style={{ "list-style-type": "none", padding: "0", margin: "0" }}>
+            <li style={{ "font-weight": "bold" }}>
+              {this.props.novel_information.name}
+            </li>
+            <li>t1</li>
+            <li>t2</li>
+            <li>t3</li>
+          </ul>
         </div>
+        <div className="novel_information_others"></div>
       </div>
     );
     return element;

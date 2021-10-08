@@ -2,7 +2,7 @@ import React from "react";
 import NavigationBar from "./NavigationBar";
 import NovelList from "./NovelList";
 import SideNavigation from "./SideNavigation";
-
+import "./MainPage.css";
 class MainPage extends React.Component {
   constructor(props) {
     super(props);
@@ -10,6 +10,7 @@ class MainPage extends React.Component {
     this.visibleChange = this.visibleChange.bind(this);
   }
   render() {
+    // console.log(this.props.novel_list)
     return (
       <div className="MainPage">
         <NavigationBar
@@ -17,7 +18,7 @@ class MainPage extends React.Component {
           visibleChange={this.visibleChange}
           location="/novel"
         ></NavigationBar>
-        <NovelList></NovelList>
+        <NovelList novel_list={this.props.novel_list}></NovelList>
         {this.state.is_show && (
           <SideNavigation visibleChange={this.visibleChange}></SideNavigation>
         )}

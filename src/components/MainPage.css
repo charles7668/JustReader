@@ -1,0 +1,24 @@
+.MainPage {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
+#navigation_bar {
+  overflow: hidden;
+}
+.NovelList {
+  overflow-y: auto;
+  flex: 1;
+}
+/* Hide scrollbar for Chrome, Safari and Opera */
+.NovelList::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.NovelList {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
