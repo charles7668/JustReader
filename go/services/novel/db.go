@@ -37,8 +37,9 @@ func AddNovel(fileName string) error {
 	}
 	logger.Println("prepare insert data")
 	nowTime := time.Now().Format("2006-01-02 15:04:05")
+	hash := novel.Information.MD5
 	queryString := fmt.Sprintf(
-		"INSERT INTO NovelInformation (Author, Brief, Name, FileName,CurrentChapter,LastChapter, LastAccess, CreateTime) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s')",
+		"INSERT INTO NovelInformation (Author, Brief, Name, FileName,CurrentChapter,LastChapter, LastAccess, CreateTime,MD5) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s')",
 		strings.ReplaceAll(novel.Information.Author, "'", "''"),
 		strings.ReplaceAll(novel.Information.Brief, "'", "''"),
 		strings.ReplaceAll(novel.Information.Name, "'", "''"),
@@ -46,14 +47,15 @@ func AddNovel(fileName string) error {
 		strings.ReplaceAll(novel.Information.CurrentChapter, "'", "''"),
 		strings.ReplaceAll(novel.Information.LastChapter, "'", "''"),
 		strings.ReplaceAll(nowTime, "'", "''"),
-		strings.ReplaceAll(nowTime, "'", "''"))
+		strings.ReplaceAll(nowTime, "'", "''"),
+		hash)
+
 	_, err = db.Exec(queryString)
 	if err != nil {
 		logger.Fatalln(err)
 		return err
 	}
 	logger.Println("insert success")
-	hash := novel.Information.MD5
 	logger.Println("create chapter table : " + hash)
 	queryString = "CREATE TABLE IF NOT EXISTS '" + hash + "' (ChapterName text,ChapterContent text)"
 	_, err = db.Exec(queryString)
@@ -91,9 +93,21 @@ func GetNovels() ([]Information, error) {
 		logger.Fatalln(err)
 		return novels, err
 	}
+
 	for result.Next() {
 		var information Information
-		err = result.Scan(&information.ID, &information.Author, &information.Brief, &information.Name, &information.FileName, &information.LastAccess, &information.CreateTime, &information.Cover)
+		err = result.Scan(
+			&information.ID,
+			&information.Author,
+			&information.Brief,
+			&information.Name,
+			&information.CurrentChapter,
+			&information.LastChapter,
+			&information.FileName,
+			&information.LastAccess,
+			&information.CreateTime,
+			&information.MD5,
+			&information.Cover)
 		if err != nil {
 			logger.Fatalln(err)
 			return novels, err

@@ -18,7 +18,7 @@ class MainPage extends React.Component {
           visibleChange={this.visibleChange}
           location="/novel"
         ></NavigationBar>
-        <NovelList novel_list={this.props.novel_list}></NovelList>
+        <NovelList></NovelList>
         {this.state.is_show && (
           <SideNavigation visibleChange={this.visibleChange}></SideNavigation>
         )}

@@ -1,22 +1,28 @@
 .novel_item {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  font-size: 22px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    font-size: 22px;
 }
+
 .novel_cover {
-  flex: 4;
+    flex: 4;
 }
+
 .novel_cover > img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: fill;
+    max-width: 100%;
+    max-height: 100%;
+    height: 100%;
+    object-fit: fill;
 }
+
 .novel_information {
-  margin-left: 20px;
-  flex: 6;
-  text-align: left;
+    margin-left: 20px;
+    flex: 6;
+    overflow: hidden;
+    text-align: left;
 }
+
 .novel_information_others {
-  width: 150px;
+    width: 150px;
 }
