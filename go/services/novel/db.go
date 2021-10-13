@@ -2,6 +2,7 @@ package novel
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -133,4 +134,17 @@ func getChapters(queryMD5 string) []Chapter {
 		chapters = append(chapters, chapter)
 	}
 	return chapters
+}
+
+//updateAccessTime update access time
+func updateAccessTime(rowID int) string {
+	logger.Println("func enter : updateAccessTime")
+	time := time.Now().Format("2006-01-02 15:04:05")
+	queryString := "UPDATE 'NovelInformation' SET LastAccess='" + time + "' WHERE ROWID=" + strconv.Itoa(rowID)
+	_, err := db.Exec(queryString)
+	if err != nil {
+		logger.Fatalln(err)
+		return "fail"
+	}
+	return time
 }

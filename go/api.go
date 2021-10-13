@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -73,6 +74,25 @@ func addNovels(c *gin.Context) {
 	c.String(http.StatusOK, "success")
 }
 
+//updateAccessTimeByID update access time by id
+func updateAccessTimeByID(c *gin.Context) {
+	logger.Println("func enter : main updateAccessTimeByID")
+	rowID, err := strconv.Atoi(c.Param("rowID"))
+	if err != nil {
+		logger.Fatalln(err)
+		c.String(http.StatusBadRequest, "param error")
+		return
+	}
+	result, err := novel.UpdateAccessTime(rowID)
+	if err != nil {
+		logger.Fatalln(err)
+		c.String(http.StatusBadRequest, "error")
+		return
+	}
+	logger.Println("func exit : main updateAccessTimeByID")
+	c.String(http.StatusOK, result)
+}
+
 //main entry point
 func main() {
 	logWriter, err := os.OpenFile("./log.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
@@ -108,6 +128,7 @@ func main() {
 	router.Use(Cors())
 	router.GET("/novels", getNovels)
 	router.GET("/novels/:id", getNovelByID)
+	router.POST("/update_time/:rowID", updateAccessTimeByID)
 	router.POST("/novels", addNovels)
 	router.Run("localhost:8088")
 }

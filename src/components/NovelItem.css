@@ -23,6 +23,10 @@
     text-align: left;
 }
 
+.novel_information > ul > li > p{
+   cursor: pointer;
+}
+
 .novel_information_others {
     width: 150px;
 }

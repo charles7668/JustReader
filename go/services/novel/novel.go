@@ -5,12 +5,15 @@ import (
 	"crypto/md5"
 	"database/sql"
 	"encoding/hex"
+	"errors"
 	"github.com/charles7668/novel-reader/services/encoding"
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/text/transform"
 	"log"
 	"os"
+	"sort"
 	"strings"
+	"time"
 )
 
 type Information struct {
@@ -72,6 +75,11 @@ func readSomeText(path string, lineCount int32) ([]byte, error) {
 //GetNovelList get novel list from dir
 func GetNovelList() ([]Information, error) {
 	novels, err := getNovels()
+	sort.Slice(novels, func(i, j int) bool {
+		time1, _ := time.Parse("2006-01-02 15:04:05", novels[i].LastAccess)
+		time2, _ := time.Parse("2006-01-02 15:04:05", novels[j].LastAccess)
+		return time2.Sub(time1) <= 0
+	})
 	return novels, err
 }
 
@@ -181,4 +189,13 @@ func AddNovel(fileName string) error {
 //GetChapters get chapter data
 func GetChapters(md5 string) []Chapter {
 	return getChapters(md5)
+}
+
+//UpdateAccessTime time string
+func UpdateAccessTime(rowID int) (string, error) {
+	result := updateAccessTime(rowID)
+	if result == "fail" {
+		return "fail", errors.New("fail")
+	}
+	return result, nil
 }

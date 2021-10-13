@@ -3,12 +3,13 @@ import React from "react";
 
 class NovelList extends React.Component {
     render() {
-        const ListItem = window.novel_list.map((novel) => {
+        const ListItem = window.novel_list.map((novel, index) => {
             return (
-                <div>
+                <div className="NovelList">
                     <NovelItem
                         key={novel}
                         novel_information={novel}
+                        index={index}
                     ></NovelItem>
                     <hr/>
                 </div>
