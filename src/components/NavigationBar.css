@@ -1,12 +1,28 @@
 #navigation_bar {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  font-size: 24px;
-  align-content: center;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    font-size: 24px;
+    align-content: center;
 }
+
 #navigation_bar > input {
-  width: 100%;
-  margin-left: 20px;
-  margin-right: 20px;
+    width: 100%;
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+#slide_nav {
+    background-color: black;
+    height: 100%;
+    color: white;
+    font-family: helvetica;
+    font-size: 25px;
+    padding: 0px 10px;
+}
+
+#slide_nav_button {
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
 }

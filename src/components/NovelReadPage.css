@@ -18,6 +18,7 @@
   height: 100%;
   padding: 0;
   background-color: white;
+  border: 0;
 }
 .go_back_button > button > img {
   margin: 0;

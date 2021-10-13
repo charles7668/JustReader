@@ -22,8 +22,8 @@ class NovelReadPage extends React.Component {
               <img
                 style={{
                   objectFit: "fill",
-                  maxWidth: "100%",
-                  maxHeight: "100%",
+                  maxWidth: "32px",
+                  maxHeight: "32px",
                 }}
                 src={arrow}
                 alt="error"
