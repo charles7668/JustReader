@@ -71,7 +71,7 @@ func readSomeText(path string, lineCount int32) ([]byte, error) {
 
 //GetNovelList get novel list from dir
 func GetNovelList() ([]Information, error) {
-	novels, err := GetNovels()
+	novels, err := getNovels()
 	return novels, err
 }
 
@@ -166,4 +166,19 @@ func getNovelInformation(path string) (Novel, error) {
 	checkSum := md5.Sum([]byte(novelInformation.FileName))
 	novelInformation.MD5 = hex.EncodeToString(checkSum[:])
 	return Novel{Information: novelInformation, Chapters: chapters}, nil
+}
+
+//CheckNovelExist check novel is exits
+func CheckNovelExist(fileName string) bool {
+	return checkNovelExist(fileName)
+}
+
+//AddNovel add novel
+func AddNovel(fileName string) error {
+	return addNovel(fileName)
+}
+
+//GetChapters get chapter data
+func GetChapters(md5 string) []Chapter {
+	return getChapters(md5)
 }

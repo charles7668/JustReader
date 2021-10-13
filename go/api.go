@@ -26,6 +26,17 @@ func getNovels(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, novels)
 }
 
+//getNovelByID	using MD5 string to select novel
+func getNovelByID(c *gin.Context) {
+	md5 := c.Param("id")
+	chapters := novel.GetChapters(md5)
+	if chapters[0].ChapterName == "error" {
+		c.IndentedJSON(http.StatusBadRequest, chapters)
+		return
+	}
+	c.IndentedJSON(http.StatusOK, chapters)
+}
+
 //addNovels url : /novels/ , Method : POST
 //add novel file to database
 func addNovels(c *gin.Context) {
@@ -96,6 +107,7 @@ func main() {
 	router := gin.Default()
 	router.Use(Cors())
 	router.GET("/novels", getNovels)
+	router.GET("/novels/:id", getNovelByID)
 	router.POST("/novels", addNovels)
 	router.Run("localhost:8088")
 }

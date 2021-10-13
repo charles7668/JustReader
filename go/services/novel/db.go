@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-//CheckNovelExist check novel is exits
-func CheckNovelExist(fileName string) bool {
+//checkNovelExist check novel is exits
+func checkNovelExist(fileName string) bool {
 	logger.Println("check file novel in row name : " + fileName)
 	queryString := "SELECT EXISTS(SELECT 1 FROM NovelInformation WHERE FileName=" + "('" + fileName + "')" + ")"
 	result, err := db.Query(queryString)
@@ -27,8 +27,8 @@ func CheckNovelExist(fileName string) bool {
 	}
 }
 
-//AddNovel add novel to database
-func AddNovel(fileName string) error {
+//addNovel add novel to database
+func addNovel(fileName string) error {
 	logger.Println("func enter : AddNovel")
 	novel, err := getNovelInformation(fileName)
 	if err != nil {
@@ -82,9 +82,9 @@ func AddNovel(fileName string) error {
 	return nil
 }
 
-//GetNovels get novel list from database
-func GetNovels() ([]Information, error) {
-	logger.Println("func enter : GetNovels")
+//getNovels get novel list from database
+func getNovels() ([]Information, error) {
+	logger.Println("func enter : getNovels")
 	var novels []Information
 	var queryString = "SELECT ROWID,* FROM NovelInformation"
 	result, err := db.Query(queryString)
@@ -114,6 +114,23 @@ func GetNovels() ([]Information, error) {
 		}
 		novels = append(novels, information)
 	}
-	logger.Println("func exit : GetNovels")
+	logger.Println("func exit : getNovels")
 	return novels, nil
+}
+
+//getChapters get chapter by md5 string
+func getChapters(queryMD5 string) []Chapter {
+	queryString := "SELECT * FROM '" + queryMD5 + "'"
+	res, err := db.Query(queryString)
+	if err != nil {
+		return []Chapter{{ChapterName: "error", ChapterContent: "error"}}
+	}
+	defer res.Close()
+	var chapters []Chapter
+	for res.Next() {
+		var chapter Chapter
+		res.Scan(&chapter.ChapterName, &chapter.ChapterContent)
+		chapters = append(chapters, chapter)
+	}
+	return chapters
 }
