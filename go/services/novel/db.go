@@ -39,6 +39,8 @@ func addNovel(fileName string) (Information, error) {
 	}
 	logger.Println("prepare insert data")
 	nowTime := time.Now().Format("2006-01-02 15:04:05")
+	novel.Information.LastAccess = nowTime
+	novel.Information.CreateTime = nowTime
 	hash := novel.Information.MD5
 	queryString := fmt.Sprintf(
 		"INSERT INTO NovelInformation (Author, Brief, Name, FileName,CurrentChapter,LastChapter, LastAccess, CreateTime,MD5) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s')",
@@ -80,14 +82,15 @@ func addNovel(fileName string) (Information, error) {
 		return novel.Information, err
 	}
 	logger.Println("query inserted novel")
-	queryString = "WHERE MD5=" + "'" + novel.Information.MD5 + "'"
-	information, err := selectNovelsFromTable(queryString)
-	if err != nil || len(information) < 1 {
+	queryString = "SELECT ROWID FROM NovelInformation WHERE MD5=" + "'" + novel.Information.MD5 + "'"
+	row := db.QueryRow(queryString)
+	row.Scan(&novel.Information.ID)
+	if err != nil {
 		logger.Fatalln("query data fail")
 		return novel.Information, errors.New("query data error")
 	}
 	logger.Println("func exit : novel/db addNovel")
-	return information[0], nil
+	return novel.Information, nil
 }
 
 func selectNovelsFromTable(condition string) ([]Information, error) {
