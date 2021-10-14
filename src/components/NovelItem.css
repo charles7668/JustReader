@@ -23,12 +23,17 @@
     text-align: left;
 }
 
-.novel_information > ul > li > p{
-   cursor: pointer;
+.novel_information > ul > li > p {
+    cursor: pointer;
 }
 
 .NovelActionBar {
     /*width: 150px;*/
     display: flex;
     flex-direction: column;
+}
+
+.novel_brief {
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

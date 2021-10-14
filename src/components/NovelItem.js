@@ -8,6 +8,7 @@ class NovelItem extends React.Component {
     last_chapter;
     chapter_name;
     md5;
+    brief;
 
     constructor(props) {
         super(props);
@@ -36,6 +37,7 @@ class NovelItem extends React.Component {
 
     render() {
         let redirect_path = "/novel/" + this.props.novel_information.md5;
+
         const redirect = (
             <Redirect to={redirect_path}></Redirect>
         )
@@ -54,6 +56,10 @@ class NovelItem extends React.Component {
                         </li>
                         <li><p>{this.props.novel_information.current_chapter}</p></li>
                         <li><p>{this.props.novel_information.last_chapter}</p></li>
+                        <li>簡介:</li>
+                        <li><p className="novel_brief"
+                               dangerouslySetInnerHTML={{__html: this.props.novel_information.brief.replaceAll('\n', '<br>')}}></p>
+                        </li>
                     </ul>
                 </div>
                 <div className="NovelActionBar">
