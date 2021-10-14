@@ -39,7 +39,7 @@ class NovelItem extends React.Component {
         let redirect_path = "/novel/" + this.props.novel_information.md5;
 
         const redirect = (
-            <Redirect to={redirect_path}></Redirect>
+            <Redirect to={redirect_path}/>
         )
         const element = (
             <div className="novel_item">
@@ -47,7 +47,7 @@ class NovelItem extends React.Component {
                     <img
                         src="https://user-images.githubusercontent.com/12591890/50744458-f3b01980-11e8-11e9-940b-2cc6af0906a7.gif"
                         alt="error"
-                    ></img>
+                    />
                 </div>
                 <div className="novel_information">
                     <ul style={{"list-style-type": "none", padding: "0", margin: "0"}}>
@@ -58,7 +58,7 @@ class NovelItem extends React.Component {
                         <li><p>{this.props.novel_information.last_chapter}</p></li>
                         <li>簡介:</li>
                         <li><p className="novel_brief"
-                               dangerouslySetInnerHTML={{__html: this.props.novel_information.brief.replaceAll('\n', '<br>')}}></p>
+                               dangerouslySetInnerHTML={{__html: this.props.novel_information.brief?.replaceAll('\n', '<br>')}}/>
                         </li>
                     </ul>
                 </div>

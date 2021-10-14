@@ -32,7 +32,11 @@ class SlideOutPanel extends Component {
                 alert('error')
             } else {
                 data.data.json().then(data => {
-                    window.novel_list.splice(0, 0, data)
+                    if (window.novel_list === null) {
+                        window.novel_list = data
+                    } else {
+                        window.novel_list.splice(0, 0, data)
+                    }
                     window.updateNovelList()
                     alert('success')
                 })
