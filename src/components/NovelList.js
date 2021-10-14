@@ -3,6 +3,9 @@ import React from "react";
 
 class NovelList extends React.Component {
     render() {
+        window.updateNovelList = () => {
+            this.setState({})
+        }
         const ListItem = window.novel_list.map((novel, index) => {
             return (
                 <div className="NovelList">

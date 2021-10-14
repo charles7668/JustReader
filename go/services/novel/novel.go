@@ -182,7 +182,7 @@ func CheckNovelExist(fileName string) bool {
 }
 
 //AddNovel add novel
-func AddNovel(fileName string) error {
+func AddNovel(fileName string) (Information, error) {
 	return addNovel(fileName)
 }
 

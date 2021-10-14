@@ -8,6 +8,7 @@ window.novel_list = []
 window.chapters = []
 window.current_index = 0
 window.current_chapter_index = 0
+window.updateNovelList = undefined;
 
 ReactDOM.render(
     <React.StrictMode>

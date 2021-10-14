@@ -47,33 +47,33 @@ func addNovels(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
 		logger.Fatalln(err)
-		c.String(http.StatusBadRequest, "request fail")
+		c.IndentedJSON(http.StatusBadRequest, novel.Information{})
 		return
 	}
 	fileName := file.Filename
 	exist := novel.CheckNovelExist(fileName)
 	if exist {
 		logger.Println(fileName + " is exist")
-		c.String(http.StatusAlreadyReported, "file exist")
+		c.IndentedJSON(http.StatusAlreadyReported, novel.Information{})
 		return
 	}
 	logger.Println(fileName)
 	err = c.SaveUploadedFile(file, fileName)
 	if err != nil {
 		logger.Fatalln(err)
-		c.String(http.StatusBadRequest, "save fail")
+		c.IndentedJSON(http.StatusBadRequest, novel.Information{})
 		return
 	}
-	err = novel.AddNovel(fileName)
+	information, err := novel.AddNovel(fileName)
 	fileErr := file_operation.DeleteFile(fileName)
 	logger.Print("delete file err : ")
 	logger.Println(fileErr)
 	if err != nil {
-		c.String(http.StatusMethodNotAllowed, "file format error")
+		c.IndentedJSON(http.StatusMethodNotAllowed, novel.Information{})
 		return
 	}
 	logger.Println("POST novels success")
-	c.String(http.StatusOK, "success")
+	c.IndentedJSON(http.StatusOK, information)
 }
 
 //updateAccessTimeByID update access time by id

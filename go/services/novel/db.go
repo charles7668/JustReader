@@ -29,12 +29,12 @@ func checkNovelExist(fileName string) bool {
 }
 
 //addNovel add novel to database
-func addNovel(fileName string) error {
-	logger.Println("func enter : addNovel")
+func addNovel(fileName string) (Information, error) {
+	logger.Println("func enter : novel/db addNovel")
 	novel, err := getNovelInformation(fileName)
 	if err != nil {
 		logger.Fatalln(err)
-		return err
+		return novel.Information, err
 	}
 	logger.Println("prepare insert data")
 	nowTime := time.Now().Format("2006-01-02 15:04:05")
@@ -54,7 +54,7 @@ func addNovel(fileName string) error {
 	_, err = db.Exec(queryString)
 	if err != nil {
 		logger.Fatalln(err)
-		return err
+		return novel.Information, err
 	}
 	logger.Println("insert success")
 	logger.Println("create chapter table : " + hash)
@@ -62,7 +62,7 @@ func addNovel(fileName string) error {
 	_, err = db.Exec(queryString)
 	if err != nil {
 		logger.Fatalln(err)
-		return err
+		return novel.Information, err
 	}
 	logger.Println("insert chapter data")
 	queryString = "INSERT INTO '" + hash + "' (ChapterName,ChapterContent) VALUES "
@@ -73,14 +73,13 @@ func addNovel(fileName string) error {
 		}
 		queryString += str
 	}
-	//logger.Print(queryString)
 	_, err = db.Exec(queryString)
 	if err != nil {
 		logger.Fatalln(err)
-		return err
+		return novel.Information, err
 	}
-	logger.Println("func exit : addNovel")
-	return nil
+	logger.Println("func exit : novel/db addNovel")
+	return novel.Information, nil
 }
 
 //getNovels get novel list from database
