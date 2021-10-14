@@ -1,7 +1,6 @@
 import React from "react";
 import {Button} from "react-bootstrap";
 import {Redirect} from "react-router";
-import {Link} from "react-router-dom";
 import arrow from "../image/icons8-chevron-left-48.png";
 import "./NovelReadPage.css";
 
@@ -10,18 +9,37 @@ class NovelReadPage extends React.Component {
 
     constructor(props) {
         super(props);
-        this.state = {is_go_back: false, title: "", md5: "", content: ""};
+        this.state = {is_go_back: false, title: "", md5: "", content: "loading..."};
         this.goBack = this.goBack.bind(this);
     }
 
     goBack() {
+        window.chapters = []
         this.setState({is_go_back: true})
     }
 
     async componentDidMount() {
-        // let page = document.querySelector("#NovelReadPage");
-        if (window.chapters.length > 0) {
-            // console.log(window.chapters[window.current_index].chapter_content)
+        console.log(window.chapters)
+        if (window.chapters[0] === undefined && window.novel_list[0] !== undefined) {
+            console.log(1)
+            const options = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+            await fetch("http://localhost:8088/update_time/" + window.novel_list[window.current_index].id, options).then(res => res.text()).then(data => {
+                window.novel_list[window.current_index].last_access = data
+                let item = window.novel_list.splice(window.current_index, 1)
+                window.novel_list.splice(0, 0, item[0])
+            })
+            await fetch("http://localhost:8088/novels/" + window.novel_list[window.current_index].md5).then(response => response.json()).then(data => window.chapters = data)
+            if (window.novel_list[window.current_index].current_chapter === "未讀") window.current_chapter_index = 0;
+            for (let i = 0; i < window.chapters.length; i++) {
+                if (window.chapters[i].chapter_name === window.novel_list[window.current_index].current_chapter)
+                    window.current_chapter_index = i;
+            }
+            // let page = document.querySelector("#NovelReadPage");
             this.setState({
                 title: window.chapters[window.current_index].chapter_name,
                 content: window.chapters[window.current_index].chapter_content.replaceAll("\\\\", "\\")
@@ -38,19 +56,12 @@ class NovelReadPage extends React.Component {
         const element = (
             <div id="NovelReadPage">
                 <div className="title_bar">
-                    <Link to="/" className="go_back_button">
-                        <Button>
-                            <img
-                                style={{
-                                    objectFit: "fill",
-                                    maxWidth: "32px",
-                                    maxHeight: "32px",
-                                }}
-                                src={arrow}
-                                alt="error"
-                            ></img>
-                        </Button>
-                    </Link>
+                    <Button className="GoBackButton" onClick={this.goBack}>
+                        <img
+                            src={arrow}
+                            alt="error"
+                        ></img>
+                    </Button>
                     <h1>{this.state.title}</h1>
                     <div></div>
                 </div>

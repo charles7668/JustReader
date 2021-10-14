@@ -7,6 +7,7 @@ import reportWebVitals from './reportWebVitals';
 window.novel_list = []
 window.chapters = []
 window.current_index = 0
+window.current_chapter_index = 0
 
 ReactDOM.render(
     <React.StrictMode>

@@ -17,17 +17,21 @@
     padding: 0;
 }
 
-.go_back_button > button {
+.title_bar > Button {
     height: 100%;
+    margin: 0;
     padding: 0;
     background-color: white;
     border: 0;
 }
 
-.go_back_button > button > img {
+.title_bar > Button > img {
     margin: 0;
     padding: 0;
+    width: 100%;
+    height: 100%;
     background-color: transparent;
+    objectFit: fill;
 }
 
 #NovelReadPage .novel_content {

@@ -43,24 +43,7 @@ class NovelItem extends React.Component {
     }
 
     async getNovelChapter() {
-
-        const options = {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }
-        await fetch("http://localhost:8088/update_time/" + this.props.novel_information.id, options).then(res => res.text()).then(data => {
-            window.novel_list[this.props.index].last_access = data
-            let item = window.novel_list.splice(this.props.index, 1)
-            window.novel_list.splice(0, 0, item[0])
-        })
-        await fetch("http://localhost:8088/novels/" + this.props.novel_information.md5).then(response => response.json()).then(data => window.chapters = data)
-        if (this.props.novel_information.current_chapter === "未讀") window.current_index = 0;
-        for (let i = 0; i < window.chapters.length; i++) {
-            if (window.chapters[i].chapter_name === this.props.novel_information.current_chapter)
-                window.current_index = i;
-        }
+        window.current_index = this.props.index
         this.setState({novel_view: true})
     }
 }
