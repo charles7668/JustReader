@@ -12,21 +12,37 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 var logger *log.Logger
 
+type Message struct {
+	Status  ErrorCode `json:"status"`
+	Message string    `json:"message"`
+}
+
+type ErrorCode int
+
+const (
+	Success = 0
+	ParamError
+	DatabaseOperationError
+)
+
 //getNovels url : /novels/, Method : GET
 func getNovels(c *gin.Context) {
-	logger.Println("GET : get novels")
+	logger.Println("func enter : main getNovels")
 	novels, err := novel.GetNovelList()
 	if err != nil {
+		logger.Fatalln(err)
 		c.IndentedJSON(http.StatusNotFound, novels)
 		return
 	}
 	c.IndentedJSON(http.StatusOK, novels)
+	logger.Println("func exit : main getNovels")
 }
 
 //getNovelByID	using MD5 string to select novel
@@ -116,9 +132,29 @@ func updateReadingByID(c *gin.Context) {
 	logger.Println("func exit : main updateReadingByID")
 }
 
+//deleteNovelByID using row id to delete time
+func deleteNovelByID(c *gin.Context) {
+	logger.Println("func enter : main deleteNovelByID")
+	rowID, err := strconv.Atoi(c.Param("rowID"))
+	if err != nil {
+		message := Message{Status: ParamError, Message: "param error"}
+		c.IndentedJSON(http.StatusBadRequest, message)
+		return
+	}
+	err = novel.DeleteNovel(rowID)
+	if err != nil {
+		message := Message{Status: DatabaseOperationError, Message: "database operation error"}
+		c.IndentedJSON(http.StatusBadRequest, message)
+		return
+	}
+	logger.Println("func exit : main deleteNovelByID")
+	c.IndentedJSON(http.StatusOK, Message{Status: Success, Message: "success"})
+}
+
 //main entry point
 func main() {
-	logWriter, err := os.OpenFile("./log.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	date := time.Now().Format("060102")
+	logWriter, err := os.OpenFile("./log"+date+".log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	logger = log.New(logWriter, "", log.Ldate|log.Ltime)
 	defer logWriter.Close()
 	_, _ = file_operation.CreateFileIfNotExist("novel-reader.db")
@@ -153,6 +189,7 @@ func main() {
 	router.GET("/novels/:id", getNovelByID)
 	router.POST("/update_time/:rowID", updateAccessTimeByID)
 	router.POST("/update_reading/:rowID", updateReadingByID)
+	router.POST("/delete/:rowID", deleteNovelByID)
 	router.POST("/novels", addNovels)
 	router.Run("localhost:8088")
 }

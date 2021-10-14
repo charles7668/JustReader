@@ -15,7 +15,6 @@ class SlideOutPanel extends Component {
     }
 
     startUpload(event) {
-        console.log(event.target.files)
         const formData = new FormData()
         formData.append('file', event.target.files[0])
         const options = {

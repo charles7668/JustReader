@@ -27,6 +27,8 @@
    cursor: pointer;
 }
 
-.novel_information_others {
-    width: 150px;
+.NovelActionBar {
+    /*width: 150px;*/
+    display: flex;
+    flex-direction: column;
 }

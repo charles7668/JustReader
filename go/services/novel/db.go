@@ -1,6 +1,7 @@
 package novel
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -78,19 +79,23 @@ func addNovel(fileName string) (Information, error) {
 		logger.Fatalln(err)
 		return novel.Information, err
 	}
+	logger.Println("query inserted novel")
+	queryString = "WHERE MD5=" + "'" + novel.Information.MD5 + "'"
+	information, err := selectNovelsFromTable(queryString)
+	if err != nil || len(information) < 1 {
+		logger.Fatalln("query data fail")
+		return novel.Information, errors.New("query data error")
+	}
 	logger.Println("func exit : novel/db addNovel")
-	return novel.Information, nil
+	return information[0], nil
 }
 
-//getNovels get novel list from database
-func getNovels() ([]Information, error) {
-	logger.Println("func enter : getNovels")
+func selectNovelsFromTable(condition string) ([]Information, error) {
 	var novels []Information
-	var queryString = "SELECT ROWID,* FROM NovelInformation"
+	var queryString = "SELECT ROWID,* FROM NovelInformation " + condition
 	result, err := db.Query(queryString)
 	defer result.Close()
 	if err != nil {
-		logger.Fatalln(err)
 		return novels, err
 	}
 
@@ -109,10 +114,20 @@ func getNovels() ([]Information, error) {
 			&information.MD5,
 			&information.Cover)
 		if err != nil {
-			logger.Fatalln(err)
 			return novels, err
 		}
 		novels = append(novels, information)
+	}
+	return novels, nil
+}
+
+//getNovels get novel list from database
+func getNovels() ([]Information, error) {
+	logger.Println("func enter : getNovels")
+	novels, err := selectNovelsFromTable("")
+	if err != nil {
+		logger.Fatalln(err)
+		return novels, err
 	}
 	logger.Println("func exit : getNovels")
 	return novels, nil
@@ -160,4 +175,33 @@ func updateReading(information Information) string {
 	}
 	logger.Println("func exit : novel/db updateReading")
 	return "success"
+}
+
+//deleteNovel delete novel using row id
+func deleteNovel(rowID int) error {
+	logger.Println("func enter : novel/db deleteNovel")
+	queryString := fmt.Sprintf("SELECT MD5 from NovelInformation WHERE ROWID=%d", rowID)
+	res, err := db.Query(queryString)
+	if err != nil {
+		logger.Fatalln(err)
+		return errors.New("db operation error")
+	}
+	res.Next()
+	var md5 string
+	res.Scan(&md5)
+	res.Close()
+	queryString = fmt.Sprintf("DROP TABLE '%s'", md5)
+	_, err = db.Exec(queryString)
+	if err != nil {
+		logger.Fatalln(err)
+		return errors.New("db operation error")
+	}
+	queryString = fmt.Sprintf("DELETE FROM NovelInformation WHERE ROWID=%d", rowID)
+	_, err = db.Exec(queryString)
+	if err != nil {
+		logger.Fatalln(err)
+		return errors.New("db operation error")
+	}
+	logger.Println("func exit : novel/db deleteNovel")
+	return nil
 }

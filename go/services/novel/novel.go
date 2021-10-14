@@ -208,3 +208,8 @@ func UpdateReading(information Information) error {
 	}
 	return nil
 }
+
+//DeleteNovel delete novel
+func DeleteNovel(rowID int) error {
+	return deleteNovel(rowID)
+}
