@@ -127,13 +127,13 @@ func getNovelInformation(path string) (Novel, error) {
 				if startContent {
 					if chapterStart {
 						chapters = append(chapters, Chapter{ChapterName: contentKeyword, ChapterContent: content})
-						content = ""
 					} else {
 						keyword, ok := keywordMap[contentKeyword]
 						if ok {
 							*keyword = content
 						}
 					}
+					content = ""
 					startContent = false
 				}
 				var split []string
@@ -164,7 +164,7 @@ func getNovelInformation(path string) (Novel, error) {
 					}
 				}
 			} else {
-				content += s[len(contentPrefix):] + changeLine[0]
+				content += s[:] + changeLine[0]
 			}
 		}
 	}

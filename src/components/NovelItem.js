@@ -51,7 +51,6 @@ class NovelItem extends React.Component {
             }
         }
         await fetch("http://localhost:8088/update_time/" + this.props.novel_information.id, options).then(res => res.text()).then(data => {
-            console.log(data)
             window.novel_list[this.props.index].last_access = data
             let item = window.novel_list.splice(this.props.index, 1)
             window.novel_list.splice(0, 0, item[0])

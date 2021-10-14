@@ -30,7 +30,7 @@ func checkNovelExist(fileName string) bool {
 
 //addNovel add novel to database
 func addNovel(fileName string) error {
-	logger.Println("func enter : AddNovel")
+	logger.Println("func enter : addNovel")
 	novel, err := getNovelInformation(fileName)
 	if err != nil {
 		logger.Fatalln(err)
@@ -79,7 +79,7 @@ func addNovel(fileName string) error {
 		logger.Fatalln(err)
 		return err
 	}
-	logger.Println("func exit : AddNovel")
+	logger.Println("func exit : addNovel")
 	return nil
 }
 
