@@ -6,9 +6,10 @@
     overflow: hidden;
 }
 
-#navigation_bar {
+#NavigationBar {
     overflow: hidden;
     height: auto;
+    margin-bottom: 10px;
 }
 
 .MainPage > .MainPanel > .SlideOutPanel {
