@@ -2,9 +2,11 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"github.com/charles7668/novel-reader/services/file_operation"
 	"github.com/charles7668/novel-reader/services/novel"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -93,6 +95,27 @@ func updateAccessTimeByID(c *gin.Context) {
 	c.String(http.StatusOK, result)
 }
 
+//updateReadingByID update reading progress
+func updateReadingByID(c *gin.Context) {
+	logger.Println("func enter : main updateReadingByID")
+	requestBody, _ := ioutil.ReadAll(c.Request.Body)
+	var information novel.Information
+	err := json.Unmarshal(requestBody, &information)
+	if err != nil {
+		logger.Fatalln(err)
+		c.String(http.StatusBadRequest, "param error")
+		return
+	}
+	err = novel.UpdateReading(information)
+	if err != nil {
+		logger.Fatalln(err)
+		c.String(http.StatusBadRequest, "db operation error")
+		return
+	}
+	c.String(http.StatusOK, "success")
+	logger.Println("func exit : main updateReadingByID")
+}
+
 //main entry point
 func main() {
 	logWriter, err := os.OpenFile("./log.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
@@ -129,6 +152,7 @@ func main() {
 	router.GET("/novels", getNovels)
 	router.GET("/novels/:id", getNovelByID)
 	router.POST("/update_time/:rowID", updateAccessTimeByID)
+	router.POST("/update_reading/:rowID", updateReadingByID)
 	router.POST("/novels", addNovels)
 	router.Run("localhost:8088")
 }

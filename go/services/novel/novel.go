@@ -199,3 +199,12 @@ func UpdateAccessTime(rowID int) (string, error) {
 	}
 	return result, nil
 }
+
+//UpdateReading update reading progress
+func UpdateReading(information Information) error {
+	result := updateReading(information)
+	if result == "fail" {
+		return errors.New("db operation error")
+	}
+	return nil
+}

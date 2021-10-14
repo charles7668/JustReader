@@ -146,5 +146,19 @@ func updateAccessTime(rowID int) string {
 		logger.Fatalln(err)
 		return "fail"
 	}
+	logger.Println("func exit : updateAccessTime")
 	return time
+}
+
+//updateReading update reading progress
+func updateReading(information Information) string {
+	logger.Println("func enter : novel/db updateReading")
+	queryString := fmt.Sprintf("UPDATE 'NovelInformation' SET CurrentChapter='%s' WHERE ROWID=%d", information.CurrentChapter, information.ID)
+	_, err := db.Exec(queryString)
+	if err != nil {
+		logger.Fatalln(err)
+		return "fail"
+	}
+	logger.Println("func exit : novel/db updateReading")
+	return "success"
 }
