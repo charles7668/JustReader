@@ -3,6 +3,7 @@ module github.com/charles7668/novel-reader
 go 1.17
 
 require (
+	github.com/gin-gonic/contrib v0.0.0-20201101042839-6a891bf89f19
 	github.com/gin-gonic/gin v1.7.4
 	github.com/gogs/chardet v0.0.0-20191104214054-4b6791f73a28
 	github.com/mattn/go-sqlite3 v1.14.8

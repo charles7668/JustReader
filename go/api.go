@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 )
 
@@ -236,6 +237,7 @@ func main() {
 	novel.Init(novel.InitStructure{DBHandle: db, Logger: logger})
 	router := gin.Default()
 	router.Use(Cors())
+	router.Use(static.Serve("/", static.LocalFile("../build", true)))
 	router.GET("/novels", getNovels)
 	router.GET("/novels/:id", getNovelChapterByID)
 	router.POST("/update_time/:rowID", updateAccessTimeByID)
