@@ -36,9 +36,11 @@
     flex-direction: column;
 }
 
-.novel_brief {
+.NovelBrief {
     overflow: hidden;
     text-overflow: ellipsis;
+    min-height: 300px;
+    max-height: 300px;
 }
 
 .novel_item > .LoadingPage {

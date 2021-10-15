@@ -86,7 +86,7 @@ class NovelItem extends React.Component {
                         <li><p>{this.props.novel_information.current_chapter}</p></li>
                         <li><p>{this.props.novel_information.last_chapter}</p></li>
                         <li>簡介:</li>
-                        <li><p className="novel_brief"
+                        <li><p className="NovelBrief"
                                dangerouslySetInnerHTML={{__html: this.props.novel_information.brief?.replaceAll('\n', '<br>')}}/>
                         </li>
                     </ul>
