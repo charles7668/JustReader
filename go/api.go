@@ -35,6 +35,10 @@ const (
 	DatabaseOperationError
 )
 
+type ServerSetting struct {
+	URL string `json:"url"`
+}
+
 //getNovels url : /novels/, Method : GET
 func getNovels(c *gin.Context) {
 	logger.Println("func enter : main getNovels")
@@ -234,6 +238,8 @@ func main() {
 			logger.Fatalln(err)
 		}
 	}
+	str, _ := json.Marshal(ServerSetting{URL: "http://localhost:8088"})
+	_ = ioutil.WriteFile("server.json", []byte(str), 0666)
 	novel.Init(novel.InitStructure{DBHandle: db, Logger: logger})
 	router := gin.Default()
 	router.Use(Cors())
