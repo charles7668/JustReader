@@ -8,6 +8,13 @@ class NavigationBar extends React.Component {
     constructor(props) {
         super(props);
         this.state = {redirect: false};
+        this.search = this.search.bind(this);
+    }
+
+    search() {
+        const element = document.querySelector("#NavigationBar > input");
+        window.searchText = element.value;
+        window.updateNovelList();
     }
 
     render() {
@@ -17,8 +24,8 @@ class NavigationBar extends React.Component {
                     <p id="slide_nav_button"
                        onClick={() => this.props.sidePanelVisibleChange(!this.props.sidePanelVisible)}>☰</p>
                 </div>
-                <input placeholder="input search text"/>
-                <Button>Search</Button>
+                <input placeholder="input search text to search title"/>
+                <Button onClick={this.search}>Search</Button>
             </div>
         );
         const redirect = <Redirect to={this.props.location}/>;
