@@ -1,10 +1,12 @@
 //SlideOutMenuContainer.js
 import React, {Component} from 'react';
 import './SlideOutPanel.css';
+import LoadingPage from "./LoadingPage";
 
 class SlideOutPanel extends Component {
     constructor(props) {
         super(props);
+        this.state = {loading: false}
         this.uploadFile = this.uploadFile.bind(this)
         this.startUpload = this.startUpload.bind(this)
     }
@@ -15,6 +17,7 @@ class SlideOutPanel extends Component {
     }
 
     startUpload(event) {
+        this.setState({loading: true})
         const formData = new FormData()
         formData.append('file', event.target.files[0])
         const options = {
@@ -38,6 +41,7 @@ class SlideOutPanel extends Component {
                         window.novel_list.splice(0, 0, data)
                     }
                     window.updateNovelList()
+                    this.setState({loading: false})
                     alert('success')
                 })
             }
@@ -58,6 +62,7 @@ class SlideOutPanel extends Component {
                     <li onClick={this.uploadFile}>Upload</li>
                 </ul>
                 <input type="file" accept=".txt" style={{display: 'none'}}/>
+                {this.state.loading === true && <LoadingPage text={"uploading..."}/>}
             </div>
         );
     }
