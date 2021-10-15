@@ -25,7 +25,7 @@ class NovelReadPage extends React.Component {
                 'Content-Type': 'application/json'
             }
         }
-        fetch("http://localhost:8088/update_reading/" + window.novel_list[0].id, options).then(response => response.text()).then(data => {
+        fetch(window.serverURL + "update_reading/" + window.novel_list[0].id, options).then(response => response.text()).then(data => {
             if (data === "fail")
                 alert("fail")
         })
@@ -42,13 +42,13 @@ class NovelReadPage extends React.Component {
                     'Content-Type': 'application/json'
                 }
             }
-            await fetch("http://localhost:8088/update_time/" + window.novel_list[window.current_index].id, options).then(res => res.text()).then(data => {
+            await fetch(window.serverURL + "update_time/" + window.novel_list[window.current_index].id, options).then(res => res.text()).then(data => {
                 window.novel_list[window.current_index].last_access = data
                 let item = window.novel_list.splice(window.current_index, 1)
                 window.novel_list.splice(0, 0, item[0])
                 window.current_index = 0
             })
-            await fetch("http://localhost:8088/novels/" + window.novel_list[window.current_index].md5).then(response => response.json()).then(data => window.chapters = data)
+            await fetch(window.serverURL + "novels/" + window.novel_list[window.current_index].md5).then(response => response.json()).then(data => window.chapters = data)
             if (window.novel_list[window.current_index].current_chapter === "未讀") {
                 window.current_chapter_index = 0;
                 window.novel_list[0].current_chapter = window.chapters[0].chapter_name
@@ -98,7 +98,7 @@ class NovelReadPage extends React.Component {
                         <img
                             src={arrow}
                             alt="error"
-                        ></img>
+                        />
                     </Button>
                     <h1>{this.state.title}</h1>
                     <div className="PageChangeBar">
@@ -114,7 +114,7 @@ class NovelReadPage extends React.Component {
                 </div>
             </div>
         );
-        const go_back_redirect = <Redirect to="/"></Redirect>;
+        const go_back_redirect = <Redirect to="/"/>;
         return this.state.is_go_back ? go_back_redirect : element;
     }
 }

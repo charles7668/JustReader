@@ -14,7 +14,7 @@ class App extends React.Component {
 
     async componentDidMount() {
         if (!this.state.is_novel_list_get) {
-            await fetch("http://localhost:8088/novels")
+            await fetch(window.serverURL + "novels")
                 .then((response) => response.json())
                 .then((data) => {
                     window.novel_list = data
@@ -22,7 +22,7 @@ class App extends React.Component {
                 });
             let split = window.location.href.toString().split('/')
             if (split[split.length - 2] === "novels") {
-                await fetch("http://localhost:8088/novels/" + window.novel_list[0].md5).then(response => response.json()).then(data => window.chapters = data)
+                await fetch(window.serverURL + "novels/" + window.novel_list[0].md5).then(response => response.json()).then(data => window.chapters = data)
                 for (let i = 0; i < window.chapters.length; i++) {
                     if (window.chapters[i].chapter_name === window.novel_list[0].current_chapter)
                         window.current_index = i;
@@ -39,8 +39,8 @@ class App extends React.Component {
                         path="/"
                         exact
                         component={() => <MainPage/>}
-                    ></Route>
-                    <Route path="/novel" component={NovelReadPage}></Route>
+                    />
+                    <Route path="/novel" component={NovelReadPage}/>
                 </HashRouter>
             </div>
         );

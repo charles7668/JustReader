@@ -17,12 +17,11 @@ class NavigationBar extends React.Component {
                     <p id="slide_nav_button"
                        onClick={() => this.props.sidePanelVisibleChange(!this.props.sidePanelVisible)}>☰</p>
                 </div>
-                {/*<Button onClick={() => this.props.visibleChange(true)}>☰</Button>*/}
-                <input placeholder="input search text"></input>
+                <input placeholder="input search text"/>
                 <Button>Search</Button>
             </div>
         );
-        const redirect = <Redirect to={this.props.location}></Redirect>;
+        const redirect = <Redirect to={this.props.location}/>;
         return this.state.redirect ? redirect : navigator;
     }
 }

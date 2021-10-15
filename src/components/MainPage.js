@@ -12,7 +12,6 @@ class MainPage extends React.Component {
     }
 
     render() {
-        // console.log(this.props.novel_list)
         return (
             <div className="MainPage">
                 <NavigationBar
@@ -20,10 +19,10 @@ class MainPage extends React.Component {
                     sidePanelVisibleChange={this.sidePanelVisibleChange}
                     sidePanelVisible={this.state.side_panel_show}
                     location="/novel"
-                ></NavigationBar>
+                />
                 <div className="MainPanel">
-                    {this.state.side_panel_show && <SlideOutPanel></SlideOutPanel>}
-                    <NovelList></NovelList>
+                    {this.state.side_panel_show && <SlideOutPanel/>}
+                    <NovelList/>
                 </div>
             </div>
         );

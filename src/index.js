@@ -9,6 +9,7 @@ window.chapters = []
 window.current_index = 0
 window.current_chapter_index = 0
 window.updateNovelList = undefined;
+window.serverURL = process.env.REACT_APP_SERVER_URL === undefined ? "/" : process.env.REACT_APP_SERVER_URL;
 
 ReactDOM.render(
     <React.StrictMode>

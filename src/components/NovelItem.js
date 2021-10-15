@@ -23,7 +23,7 @@ class NovelItem extends React.Component {
         const options = {
             method: 'POST'
         }
-        await fetch("http://localhost:8088/delete/" + this.props.novel_information.id, options).then(response => response.json()).then(data => {
+        await fetch(window.serverURL + "delete/" + this.props.novel_information.id, options).then(response => response.json()).then(data => {
             for (let i = 0; i < window.novel_list.length; i++) {
                 if (window.novel_list[i].id === this.props.novel_information.id) {
                     window.novel_list.splice(i, 1)

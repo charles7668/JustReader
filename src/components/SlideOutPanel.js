@@ -22,7 +22,7 @@ class SlideOutPanel extends Component {
             body: formData
         }
 
-        fetch("http://localhost:8088/novels", options).then(response => ({
+        fetch(window.serverURL + "novels", options).then(response => ({
             status: response.status,
             data: response
         })).then(data => {
