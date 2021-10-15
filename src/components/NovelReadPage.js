@@ -33,9 +33,7 @@ class NovelReadPage extends React.Component {
     }
 
     async componentDidMount() {
-        console.log(window.chapters)
         if (window.chapters[0] === undefined && window.novel_list[0] !== undefined) {
-            console.log(1)
             const options = {
                 method: 'POST',
                 headers: {

@@ -2,6 +2,7 @@ import React from "react";
 import "./NovelItem.css";
 import {Redirect} from "react-router-dom";
 import {Button} from "react-bootstrap";
+import LoadingPage from "./LoadingPage";
 
 class NovelItem extends React.Component {
     current_chapter;
@@ -9,12 +10,17 @@ class NovelItem extends React.Component {
     chapter_name;
     md5;
     brief;
+    cover;
 
     constructor(props) {
         super(props);
-        this.state = {novel_view: false}
+        this.state = {
+            novel_view: false,
+            loading: false
+        }
         this.getNovelChapter = this.getNovelChapter.bind(this)
         this.deleteItem = this.deleteItem.bind(this)
+        this.uploadCover = this.uploadCover.bind(this)
     }
 
     async deleteItem() {
@@ -35,9 +41,32 @@ class NovelItem extends React.Component {
         })
     }
 
+    uploadCover() {
+        const input = document.createElement("input")
+        input.type = "file"
+        input.addEventListener('change', () => {
+            const formData = new FormData()
+            formData.append('file', input.files[0])
+            const options = {
+                method: 'POST',
+                body: formData
+            }
+            this.setState({loading: true})
+            fetch(window.serverURL + "cover/" + this.props.novel_information.id, options).then(response => response.json()).then(data => {
+                if (data.status !== 0) {
+                    alert(data.message)
+                }
+                window.novel_list[this.props.index].cover = data.message
+                this.setState({loading: false})
+            })
+        })
+        input.click()
+    }
+
     render() {
         let redirect_path = "/novel/" + this.props.novel_information.md5;
 
+        const src = "data:image/png;base64," + this.props.novel_information.cover;
         const redirect = (
             <Redirect to={redirect_path}/>
         )
@@ -45,8 +74,8 @@ class NovelItem extends React.Component {
             <div className="novel_item">
                 <div className="novel_cover">
                     <img
-                        src="https://user-images.githubusercontent.com/12591890/50744458-f3b01980-11e8-11e9-940b-2cc6af0906a7.gif"
-                        alt="error"
+                        src={src}
+                        alt="no cover"
                     />
                 </div>
                 <div className="novel_information">
@@ -63,8 +92,10 @@ class NovelItem extends React.Component {
                     </ul>
                 </div>
                 <div className="NovelActionBar">
-                    <Button variant="outline-primary" onClick={this.deleteItem}>Delete</Button>
+                    <Button variant="outline-primary" onClick={this.uploadCover}>上傳圖片</Button>
+                    <Button variant="outline-secondary" onClick={this.deleteItem}>Delete</Button>
                 </div>
+                {this.state.loading === true && <LoadingPage text={"uploading"}/>}
             </div>
         );
         return this.state.novel_view ? redirect : element;

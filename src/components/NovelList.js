@@ -11,12 +11,10 @@ class NovelList extends React.Component {
 
     render() {
         let element = <div className="NovelList"/>
-        console.log(window.searchText)
         const searchText = window.searchText === undefined ? "" : window.searchText;
         let list = [];
         if (window.novel_list !== null && window.novel_list.length > 0) {
             list = window.novel_list.filter(novel => novel.name.includes(searchText))
-            console.log(list)
         }
 
         if (list.length > 0) {

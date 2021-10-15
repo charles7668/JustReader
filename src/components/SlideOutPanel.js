@@ -51,7 +51,6 @@ class SlideOutPanel extends Component {
     componentDidMount() {
         const element = document.querySelector('input[type="file"]')
         element.addEventListener('change', this.startUpload)
-        console.log(element)
     }
 
     render() {
