@@ -16,15 +16,25 @@ class SlideOutPanel extends Component {
         element.click()
     }
 
+    fetchWithTimeout(url, options, timeout = 5000) {
+        return Promise.race([
+            fetch(url, options),
+            new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('timeout')), timeout)
+            )
+        ]);
+    }
+
     startUpload(event) {
         this.setState({loading: true})
         const formData = new FormData()
         formData.append('file', event.target.files[0])
+
+        // 5 second timeout:
         const options = {
             method: 'POST',
-            body: formData
+            body: formData,
         }
-
         fetch(window.serverURL + "novels", options).then(response => ({
             status: response.status,
             data: response
@@ -41,10 +51,13 @@ class SlideOutPanel extends Component {
                         window.novel_list.splice(0, 0, data)
                     }
                     window.updateNovelList()
-                    this.setState({loading: false})
                     alert('success')
                 })
             }
+            this.setState({loading: false})
+        }).catch((err) => {
+            alert(err)
+            this.setState({loading: false})
         })
     }
 
