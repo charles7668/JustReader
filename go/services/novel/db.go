@@ -208,3 +208,18 @@ func deleteNovel(rowID int) error {
 	logger.Println("func exit : novel/db deleteNovel")
 	return nil
 }
+
+func addImage(rowID int, image string) error {
+	logger.Println("func enter : novel/db addImage")
+	queryString := fmt.Sprintf("UPDATE 'NovelInformation' SET Cover='%s' WHERE ROWID=%d",
+		strings.ReplaceAll(image, "'", "''"),
+		rowID,
+	)
+	_, err := db.Exec(queryString)
+	if err != nil {
+		logger.Fatalln(err)
+		return err
+	}
+	logger.Println("func exit : novel/db addImage")
+	return nil
+}

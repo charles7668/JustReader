@@ -27,7 +27,7 @@ type Information struct {
 	CreateTime     string `json:"create_time"`
 	LastAccess     string `json:"last_access"`
 	MD5            string `json:"md5"`
-	Cover          []byte `json:"cover"`
+	Cover          string `json:"cover"`
 }
 
 type Chapter struct {
@@ -212,4 +212,9 @@ func UpdateReading(information Information) error {
 //DeleteNovel delete novel
 func DeleteNovel(rowID int) error {
 	return deleteNovel(rowID)
+}
+
+//AddImage add image by row id , image must convert to base64 encoding
+func AddImage(rowID int, image string) error {
+	return addImage(rowID, image)
 }

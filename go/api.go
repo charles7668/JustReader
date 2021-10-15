@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/charles7668/novel-reader/services/file_operation"
@@ -10,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -45,8 +47,8 @@ func getNovels(c *gin.Context) {
 	logger.Println("func exit : main getNovels")
 }
 
-//getNovelByID	using MD5 string to select novel
-func getNovelByID(c *gin.Context) {
+//getNovelChapterByID	using MD5 string to select novel
+func getNovelChapterByID(c *gin.Context) {
 	md5 := c.Param("id")
 	chapters := novel.GetChapters(md5)
 	if chapters[0].ChapterName == "error" {
@@ -151,6 +153,55 @@ func deleteNovelByID(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, Message{Status: Success, Message: "success"})
 }
 
+//addImageByID add image using row id
+func addImageByID(c *gin.Context) {
+	logger.Println("func enter : main addImageByID")
+	rowID, err := strconv.Atoi(c.Param("rowID"))
+	if err != nil {
+		logger.Fatalln(err)
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "Param error"})
+		return
+	}
+	file, err := c.FormFile("file")
+	allowExt := []string{".png", ".jpg", ".jpeg", ".ico"}
+	ext := path.Ext(file.Filename)
+	isAllow := false
+	for _, allow := range allowExt {
+		if ext == allow {
+			isAllow = true
+			break
+		}
+	}
+	if err != nil {
+		logger.Fatalln(err)
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "Param error"})
+		return
+	}
+	if !isAllow {
+		logger.Fatalln(file.Filename + " not allow file format")
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: file.Filename + " not allow file format"})
+		return
+	}
+	err = c.SaveUploadedFile(file, file.Filename)
+	if err != nil {
+		logger.Fatalln(err)
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "Param error"})
+		return
+	}
+	open, _ := os.Open(file.Filename)
+	defer file_operation.DeleteFile(file.Filename)
+	defer open.Close()
+	buf, _ := ioutil.ReadAll(open)
+	base64String := base64.StdEncoding.EncodeToString(buf)
+	err = novel.AddImage(rowID, base64String)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: DatabaseOperationError, Message: "database error"})
+		return
+	}
+	c.IndentedJSON(http.StatusOK, Message{Status: Success, Message: base64String})
+	logger.Println("func exit : main addImageByID")
+}
+
 //main entry point
 func main() {
 	date := time.Now().Format("060102")
@@ -176,7 +227,7 @@ func main() {
 							    LastAccess text,
 							    CreateTime text,
 							    MD5		   text,
-								Cover      blob
+								Cover      text
 							)`)
 		if err != nil {
 			logger.Fatalln(err)
@@ -186,11 +237,12 @@ func main() {
 	router := gin.Default()
 	router.Use(Cors())
 	router.GET("/novels", getNovels)
-	router.GET("/novels/:id", getNovelByID)
+	router.GET("/novels/:id", getNovelChapterByID)
 	router.POST("/update_time/:rowID", updateAccessTimeByID)
 	router.POST("/update_reading/:rowID", updateReadingByID)
 	router.POST("/delete/:rowID", deleteNovelByID)
 	router.POST("/novels", addNovels)
+	router.POST("/cover/:rowID", addImageByID)
 	router.Run("localhost:8088")
 }
 
