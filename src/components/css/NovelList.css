@@ -1,0 +1,15 @@
+.NovelList {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.NovelList > .NovelItem {
+    width: 700px;
+    height: 400px;
+    margin: 10px auto 10px 10px;
+}
+
+.NovelList > .LastElement {
+    flex-grow: 1;
+}

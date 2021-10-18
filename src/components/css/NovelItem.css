@@ -1,50 +1,55 @@
-.novel_item {
+.NovelItem {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
     font-size: 22px;
 }
 
-.novel_cover {
-    flex: 2;
-    min-width: 400px;
+.NovelItem > .NovelCover {
+    width: 250px;
     background-color: black;
 }
 
-.novel_cover > img {
+.NovelItem > .NovelCover > img {
     max-width: 100%;
     max-height: 100%;
     height: 100%;
     width: 100%;
-    object-fit: fill;
+    object-fit: cover;
     color: white;
 }
 
-.novel_information {
+.NovelItem > .NovelInformation {
     margin-left: 20px;
-    flex: 8;
+    flex: 1;
     overflow: hidden;
     text-align: left;
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    flex-wrap: nowrap;
 }
 
-.novel_information > ul > li > p {
+
+.NovelItem > .NovelInformation > p {
     cursor: pointer;
 }
 
-.NovelActionBar {
+.NovelItem > .NovelActionBar {
     display: flex;
     flex-direction: column;
 }
 
-.NovelBrief {
-    overflow: hidden;
+.NovelItem .NovelBrief {
+    overflow: fragments;
     text-overflow: ellipsis;
-    min-height: 300px;
-    max-height: 300px;
+    flex: 1;
 }
 
-.novel_item > .LoadingPage {
+.NovelItem > .LoadingPage {
     position: fixed;
+    left: 0;
+    top: 0;
     width: 100%;
     height: 100%;
     opacity: 0.5;

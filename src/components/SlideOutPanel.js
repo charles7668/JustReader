@@ -1,36 +1,14 @@
-//SlideOutMenuContainer.js
-import React, {Component} from 'react';
-import './SlideOutPanel.css';
+import React, {useEffect, useState} from 'react';
+import './css/SlideOutPanel.css';
 import LoadingPage from "./LoadingPage";
 
-class SlideOutPanel extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {loading: false}
-        this.uploadFile = this.uploadFile.bind(this)
-        this.startUpload = this.startUpload.bind(this)
-    }
-
-    uploadFile() {
-        const element = document.querySelector('input[type="file"]')
-        element.click()
-    }
-
-    fetchWithTimeout(url, options, timeout = 5000) {
-        return Promise.race([
-            fetch(url, options),
-            new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('timeout')), timeout)
-            )
-        ]);
-    }
-
-    startUpload(event) {
-        this.setState({loading: true})
+function SlideOutPanel() {
+    const [loading, setLoading] = useState(false)
+    const startUpload = (event) => {
+        setLoading(true)
         const formData = new FormData()
         formData.append('file', event.target.files[0])
 
-        // 5 second timeout:
         const options = {
             method: 'POST',
             body: formData,
@@ -54,30 +32,30 @@ class SlideOutPanel extends Component {
                     alert('success')
                 })
             }
-            this.setState({loading: false})
+            setLoading(false)
         }).catch((err) => {
             alert(err)
-            this.setState({loading: false})
+            setLoading(false)
         })
     }
-
-    componentDidMount() {
+    const uploadFile = () => {
         const element = document.querySelector('input[type="file"]')
-        element.addEventListener('change', this.startUpload)
+        element.click()
     }
-
-    render() {
-        return (
-            <div className="SlideOutPanel">
-                <ul className='slide_menu'>
-                    <li>Setting</li>
-                    <li onClick={this.uploadFile}>Upload</li>
-                </ul>
-                <input type="file" accept=".txt" style={{display: 'none'}}/>
-                {this.state.loading === true && <LoadingPage text={"uploading..."}/>}
-            </div>
-        );
-    }
+    useEffect(() => {
+        const element = document.querySelector('input[type="file"]')
+        element.addEventListener('change', startUpload)
+    }, [])
+    return (
+        <div className="SlideOutPanel">
+            <ul className="SlideMenu">
+                <li>Setting</li>
+                <li onClick={uploadFile}>Upload</li>
+            </ul>
+            <input type="file" accept=".txt"/>
+            {loading === true && <LoadingPage text={"uploading..."}/>}
+        </div>
+    );
 }
 
 export default SlideOutPanel;

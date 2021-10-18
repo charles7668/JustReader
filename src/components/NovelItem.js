@@ -1,110 +1,93 @@
-import React from "react";
-import "./NovelItem.css";
+// noinspection JSUnresolvedVariable
+
+import React, {useState} from "react";
+import "./css/NovelItem.css";
 import {Redirect} from "react-router-dom";
 import {Button} from "react-bootstrap";
 import LoadingPage from "./LoadingPage";
 
-class NovelItem extends React.Component {
-    current_chapter;
-    last_chapter;
-    chapter_name;
-    md5;
-    brief;
-    cover;
+function NovelItem(props) {
+    const [novelView, setNovelView] = useState(false)
+    const [loading, setLoading] = useState(false)
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            novel_view: false,
-            loading: false
-        }
-        this.getNovelChapter = this.getNovelChapter.bind(this)
-        this.deleteItem = this.deleteItem.bind(this)
-        this.uploadCover = this.uploadCover.bind(this)
-    }
+    let redirect_path = "/novel/" + props.novel_information.md5;
 
-    async deleteItem() {
-        let dialog = window.confirm('確定刪除?');
-        if (!dialog) return;
-        const options = {
-            method: 'POST'
-        }
-        await fetch(window.serverURL + "delete/" + this.props.novel_information.id, options).then(response => response.json()).then(data => {
-            for (let i = 0; i < window.novel_list.length; i++) {
-                if (window.novel_list[i].id === this.props.novel_information.id) {
-                    window.novel_list.splice(i, 1)
-                    break
-                }
-            }
-            window.updateNovelList()
-            alert(data.message)
-        })
-    }
-
-    uploadCover() {
-        const input = document.createElement("input")
-        input.type = "file"
-        input.addEventListener('change', () => {
-            const formData = new FormData()
-            formData.append('file', input.files[0])
-            const options = {
-                method: 'POST',
-                body: formData
-            }
-            this.setState({loading: true})
-            fetch(window.serverURL + "cover/" + this.props.novel_information.id, options).then(response => response.json()).then(data => {
-                if (data.status !== 0) {
-                    alert(data.message)
-                }
-                window.novel_list[this.props.index].cover = data.message
-                this.setState({loading: false})
-            })
-        })
-        input.click()
-    }
-
-    render() {
-        let redirect_path = "/novel/" + this.props.novel_information.md5;
-
-        const src = "data:image/png;base64," + this.props.novel_information.cover;
-        const redirect = (
-            <Redirect to={redirect_path}/>
-        )
-        const element = (
-            <div className="novel_item">
-                <div className="novel_cover">
-                    <img
-                        src={src}
-                        alt="no cover"
-                    />
-                </div>
-                <div className="novel_information">
-                    <ul style={{"list-style-type": "none", padding: "0", margin: "0"}}>
-                        <li style={{"font-weight": "bold"}}>
-                            <p onClick={this.getNovelChapter}> {this.props.novel_information.name} </p>
-                        </li>
-                        <li><p>{this.props.novel_information.current_chapter}</p></li>
-                        <li><p>{this.props.novel_information.last_chapter}</p></li>
-                        <li>簡介:</li>
-                        <li><p className="NovelBrief"
-                               dangerouslySetInnerHTML={{__html: this.props.novel_information.brief?.replaceAll('\n', '<br>')}}/>
-                        </li>
-                    </ul>
-                </div>
-                <div className="NovelActionBar">
-                    <Button variant="outline-primary" onClick={this.uploadCover}>上傳圖片</Button>
-                    <Button variant="outline-secondary" onClick={this.deleteItem}>Delete</Button>
-                </div>
-                {this.state.loading === true && <LoadingPage text={"uploading"}/>}
+    const src = "data:image/png;base64," + props.novel_information.cover;
+    const redirect = (
+        <Redirect to={redirect_path}/>
+    )
+    const element = (
+        <div className="NovelItem">
+            <div className="NovelCover">
+                <img
+                    src={src}
+                    alt="no cover"
+                />
             </div>
-        );
-        return this.state.novel_view ? redirect : element;
-    }
-
-    async getNovelChapter() {
-        window.current_index = this.props.index
-        this.setState({novel_view: true})
-    }
+            <div className="NovelInformation">
+                <p onClick={() => {
+                    window.current_index = props.index
+                    setNovelView(true)
+                }}> {props.novel_information.name} </p>
+                <p>{props.novel_information.current_chapter}</p>
+                <p>{props.novel_information.last_chapter}</p>
+                <p>簡介:</p>
+                <p className="NovelBrief"
+                   dangerouslySetInnerHTML={{__html: props.novel_information.brief?.replaceAll('\n', '<br>')}}/>
+            </div>
+            <div className="NovelActionBar">
+                <Button variant="outline-primary"
+                        onClick={() => {
+                            uploadCover({rowID: props.novel_information.id, index: props.index, setLoading: setLoading})
+                        }}>上傳圖片</Button>
+                <Button variant="outline-secondary" onClick={() => {
+                    deleteItem({rowID: props.novel_information.id})
+                }}>Delete</Button>
+            </div>
+            {loading === true && <LoadingPage text={"uploading"}/>}
+        </div>
+    );
+    return novelView ? redirect : element;
 }
 
+
+const uploadCover = ({rowID, index, setLoading}) => {
+    const input = document.createElement("input")
+    input.type = "file"
+    input.addEventListener('change', () => {
+        const formData = new FormData()
+        formData.append('file', input.files[0])
+        const options = {
+            method: 'POST',
+            body: formData
+        }
+        setLoading(true)
+        fetch(window.serverURL + "cover/" + rowID, options).then(response => response.json()).then(data => {
+            if (data.status !== 0) {
+                alert(data.message)
+            }
+            window.novel_list[index].cover = data.message
+            setLoading(false)
+        })
+    })
+    input.click()
+}
+
+const deleteItem = ({rowID}) => {
+    let dialog = window.confirm('確定刪除?');
+    if (!dialog) return;
+    const options = {
+        method: 'POST'
+    }
+    fetch(window.serverURL + "delete/" + rowID, options).then(response => response.json()).then(data => {
+        for (let i = 0; i < window.novel_list.length; i++) {
+            if (window.novel_list[i].id === rowID) {
+                window.novel_list.splice(i, 1)
+                break
+            }
+        }
+        window.updateNovelList()
+        alert(data.message)
+    })
+}
 export default NovelItem;

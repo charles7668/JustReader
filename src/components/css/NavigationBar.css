@@ -1,28 +1,36 @@
-#NavigationBar {
+.NavigationBar {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
     font-size: 24px;
     align-content: center;
+    position: relative;
 }
 
-#NavigationBar > input {
+.NavigationBar > input {
     width: 100%;
     margin-left: 20px;
     margin-right: 20px;
 }
 
-#slide_nav {
+.NavigationBar > .SlideNavSwitch {
     background-color: black;
     height: 100%;
     color: white;
-    font-family: helvetica;
+    font-family: helvetica, monospace;
     font-size: 25px;
-    padding: 0px 10px;
+    padding: 0 10px;
 }
 
-#slide_nav_button {
+.NavigationBar > .SlideNavSwitch > p {
     margin: 0;
     padding: 0;
     cursor: pointer;
+}
+
+.NavigationBar > .SlideOutPanel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 400px;
 }
