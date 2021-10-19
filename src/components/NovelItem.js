@@ -14,7 +14,7 @@ function NovelItem(props) {
 
     const src = "data:image/png;base64," + props.novel_information.cover;
     const redirect = (
-        <Redirect to={redirect_path}/>
+        <Redirect to={{pathname: redirect_path, state: {novel: props.novel_information, index: props.index}}}/>
     )
     const element = (
         <div className="NovelItem">

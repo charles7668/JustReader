@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import {ChakraProvider} from "@chakra-ui/react";
 
 window.novel_list = []
 window.chapters = []
@@ -14,8 +15,11 @@ window.searchText = ""
 
 ReactDOM.render(
     <React.StrictMode>
-        <App/>
-    </React.StrictMode>,
+        <ChakraProvider>
+            <App/>
+        </ChakraProvider>
+    </React.StrictMode>
+    ,
     document.getElementById('root')
 );
 

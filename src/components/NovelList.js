@@ -1,6 +1,7 @@
 import NovelItem from "./NovelItem";
 import React, {useState} from "react";
 import './css/NovelList.css'
+import {HStack} from "@chakra-ui/react";
 
 function useForceUpdate() {
     const [value, setValue] = useState(0)
@@ -25,7 +26,9 @@ function NovelList() {
                 />
             )
         });
-        element = <div className="NovelList">{ListItem}<div className="LastElement"/></div>;
+        element = <HStack className="NovelList" spacing="20px" wrap="wrap">{ListItem}
+            <div className="LastElement"/>
+        </HStack>;
     }
     return element;
 }
