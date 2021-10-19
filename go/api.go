@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/charles7668/novel-reader/services/AppSetting"
 	"github.com/charles7668/novel-reader/services/file_operation"
 	"github.com/charles7668/novel-reader/services/novel"
 	"io/ioutil"
@@ -207,6 +208,45 @@ func addImageByID(c *gin.Context) {
 	logger.Println("func exit : main addImageByID")
 }
 
+func updateSetting(c *gin.Context) {
+	logger.Println("func enter : main updateSetting")
+	body := c.Request.Body
+	bodyData, err := ioutil.ReadAll(body)
+	if err != nil {
+		logger.Println(err)
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "request body error"})
+		logger.Println("func exit : main updateSetting")
+		return
+	}
+	var setting AppSetting.Setting
+	err = json.Unmarshal(bodyData, &setting)
+	if err != nil {
+		logger.Println(err)
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "request body error"})
+		logger.Println("func exit : main updateSetting")
+		return
+	}
+	err = AppSetting.UpdateSetting(setting)
+	if err != nil {
+		logger.Println(err)
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: DatabaseOperationError, Message: "db error"})
+		logger.Println("func exit : main updateSetting")
+		return
+	}
+	c.IndentedJSON(http.StatusOK, Message{Status: Success, Message: "Success"})
+	logger.Println("func exit : main updateSetting")
+}
+
+func getSetting(c *gin.Context) {
+	setting, err := AppSetting.GetSetting()
+	if err != nil {
+		logger.Println(err)
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: DatabaseOperationError, Message: "get setting from db error"})
+		return
+	}
+	c.IndentedJSON(http.StatusOK, setting)
+}
+
 //main entry point
 func main() {
 	date := time.Now().Format("060102")
@@ -221,7 +261,7 @@ func main() {
 	} else {
 		defer db.Close()
 		logger.Println("create NovelInformation table if not exist")
-		_, err := db.Exec(`CREATE TABLE IF NOT EXISTS NovelInformation
+		queryString := `CREATE TABLE IF NOT EXISTS NovelInformation
 							(
 							    Author     text,
 							    Brief      text,
@@ -233,7 +273,8 @@ func main() {
 							    CreateTime text,
 							    MD5		   text,
 								Cover      text
-							)`)
+							)`
+		_, err := db.Exec(queryString)
 		if err != nil {
 			logger.Fatalln(err)
 		}
@@ -241,17 +282,23 @@ func main() {
 	str, _ := json.Marshal(ServerSetting{URL: "http://localhost:8088"})
 	_ = ioutil.WriteFile("server.json", []byte(str), 0666)
 	novel.Init(novel.InitStructure{DBHandle: db, Logger: logger})
+	AppSetting.Init(AppSetting.InitStructure{Logger: logger, Database: db})
 	router := gin.Default()
 	router.Use(Cors())
 	router.Use(static.Serve("/", static.LocalFile("../build", true)))
 	router.GET("/novels", getNovels)
 	router.GET("/novels/:id", getNovelChapterByID)
+	router.GET("/setting", getSetting)
 	router.POST("/update_time/:rowID", updateAccessTimeByID)
 	router.POST("/update_reading/:rowID", updateReadingByID)
 	router.POST("/delete/:rowID", deleteNovelByID)
 	router.POST("/novels", addNovels)
 	router.POST("/cover/:rowID", addImageByID)
-	router.Run("localhost:8088")
+	router.POST("/update_setting", updateSetting)
+	err = router.Run("localhost:8088")
+	if err != nil {
+		logger.Fatalln(err)
+	}
 }
 
 // Cors setting cross-origin
