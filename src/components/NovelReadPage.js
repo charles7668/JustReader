@@ -1,19 +1,22 @@
 // noinspection JSUnresolvedVariable
+// noinspection JSUnresolvedVariable
 
-import React, {useEffect, useRef, useState} from "react";
+import React, {useContext, useEffect, useRef, useState} from "react";
 import {Button} from "react-bootstrap";
 import {Redirect} from "react-router";
 import "./css/NovelReadPage.css";
 import {Box, IconButton, Menu, MenuButton, MenuItem, MenuList} from "@chakra-ui/react";
 import {AiOutlineArrowLeft, DiAptana} from "react-icons/all";
 import {SketchPicker} from "react-color";
+import {SettingContext} from "../App";
 
 function NovelReadPage(props) {
+    const settingContext = useContext(SettingContext)
     const [chapterIndex, setChapterIndex] = useState(0)
     const [isGoBack, setIsGoBack] = useState(false)
     const [backgroundColorPick, setBackgroundColorPick] = useState(false)
-    const [backgroundColor, setBackgroundColor] = useState("#000")
-    const [fontColor, setFontColor] = useState('#FFF')
+    const [backgroundColor, setBackgroundColor] = useState(settingContext.reading_background_color)
+    const [fontColor, setFontColor] = useState(settingContext.reading_font_color)
     const [fontColorPick, setFontColorPick] = useState(false)
     const [pickColor, setPickColor] = useState('#000')
     const [viewChapter, setViewChapter] = useState({title: '', content: 'loading'})
@@ -22,9 +25,12 @@ function NovelReadPage(props) {
     const updateColor = useRef()
     const contentRef = useRef(undefined)
     const completeRef = useRef(false)
+    // const recordRef = useRef({
+    //     backgroundColor: settingContext.reading_background_color,
+    //     fontColor: settingContext.reading_font_color
+    // })
 
     async function updateReading() {
-        console.log('up')
         const options = {
             method: 'POST',
             body: JSON.stringify(novel.current.information),
@@ -41,7 +47,23 @@ function NovelReadPage(props) {
     }
 
     function goBack() {
-        updateReading().then(() => setIsGoBack(true))
+        updateReading().then(() => {
+            settingContext.reading_background_color = backgroundColor
+            settingContext.reading_font_color = fontColor
+            const options = {
+                method: 'POST',
+                body: JSON.stringify(settingContext),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+            fetch(window.serverURL + "update_setting", options).then(res => res.json()).then(message => {
+                if (message.status !== 0) {
+                    alert(message.message)
+                }
+            }).catch(err => alert(err))
+            setIsGoBack(true)
+        })
     }
 
     useEffect(() => {
