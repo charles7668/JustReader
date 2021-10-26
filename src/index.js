@@ -5,11 +5,11 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import {ChakraProvider} from "@chakra-ui/react";
 
-window.novel_list = []
 window.chapters = []
 window.current_index = 0
 window.current_chapter_index = 0
 window.updateNovelList = undefined;
+window.searchTextChange = undefined;
 window.serverURL = process.env.REACT_APP_SERVER_URL === undefined ? "/" : process.env.REACT_APP_SERVER_URL;
 window.searchText = ""
 

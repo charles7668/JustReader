@@ -22,12 +22,7 @@ function SlideOutPanel() {
             } else if (data.status !== 200) {
                 alert('error')
             } else {
-                data.data.json().then(data => {
-                    if (window.novel_list === null) {
-                        window.novel_list = data
-                    } else {
-                        window.novel_list.splice(0, 0, data)
-                    }
+                data.data.json().then(() => {
                     window.updateNovelList()
                     alert('success')
                 })

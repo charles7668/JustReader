@@ -8,8 +8,7 @@ function NavigationBar() {
     const [sideVisible, setSideVisible] = useState(false)
     const search = () => {
         const element = document.querySelector("#NavigationBar > input");
-        window.searchText = element.value;
-        window.updateNovelList();
+        window.updateNovelList(element.value);
     }
     return (
         <div className="NavigationBar">

@@ -1,36 +1,46 @@
 import NovelItem from "./NovelItem";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import './css/NovelList.css'
 import {HStack} from "@chakra-ui/react";
 
 function useForceUpdate() {
-    const [value, setValue] = useState(0)
-    return () => setValue(value + 1)
+    const [counter, setCounter] = useState(0)
+    return [counter, () => setCounter(counter + 1)]
 }
 
 function NovelList() {
-    let element = <div className="NovelList"/>
-    const searchText = window.searchText === undefined ? "" : window.searchText;
-    window.updateNovelList = useForceUpdate();
-    let list = []
-    if (window.novel_list !== null && window.novel_list.length > 0) {
-        list = window.novel_list.filter(novel => novel.name.includes(searchText))
-    }
-    if (list.length > 0) {
-        const ListItem = list.map((novel, index) => {
-            return (
-                <NovelItem
-                    key={novel}
-                    novel_information={novel}
-                    index={index}
-                />
-            )
-        });
-        element = <HStack className="NovelList" spacing="20px" wrap="wrap">{ListItem}
-            <div className="LastElement"/>
-        </HStack>;
-    }
-    return element;
+    const [novelList, setNovelList] = useState([])
+    const [searchText, setSearchText] = useState('')
+    const [update, forceUpdate] = useForceUpdate()
+    let list
+
+    useEffect(() => {
+        window.searchTextChange = (text) => {
+            setSearchText(text)
+        }
+        window.updateNovelList = () => forceUpdate()
+    }, [forceUpdate])
+    useEffect(() => {
+        async function getList() {
+            return await fetch(window.serverURL + "novels")
+                .then((response) => response.json())
+        }
+
+        getList().then(data => setNovelList(Array.isArray(data) ? data : []))
+    }, [update])
+    list = novelList.filter(novel => novel.name.includes(searchText))
+    const ListItem = list.map((novel) => {
+        return (
+            <NovelItem
+                key={novel}
+                novelInformation={novel}
+                update={forceUpdate}
+            />
+        )
+    });
+    return <HStack className="NovelList" spacing="20px" wrap="wrap">{ListItem}
+        <div className="LastElement"/>
+    </HStack>;
 }
 
 export default NovelList;
