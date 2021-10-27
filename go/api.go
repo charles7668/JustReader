@@ -247,6 +247,8 @@ func getSetting(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, setting)
 }
 
+var StaticFilePath = "../build"
+
 //main entry point
 func main() {
 	date := time.Now().Format("060102")
@@ -285,7 +287,7 @@ func main() {
 	AppSetting.Init(AppSetting.InitStructure{Logger: logger, Database: db})
 	router := gin.Default()
 	router.Use(Cors())
-	router.Use(static.Serve("/", static.LocalFile("../build", true)))
+	router.Use(static.Serve("/", static.LocalFile(StaticFilePath, true)))
 	router.GET("/novels", getNovels)
 	router.GET("/novels/:id", getNovelChapterByID)
 	router.GET("/setting", getSetting)
