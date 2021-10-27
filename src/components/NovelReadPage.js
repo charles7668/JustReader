@@ -1,14 +1,18 @@
 // noinspection JSUnresolvedVariable
 // noinspection JSUnresolvedVariable
 
-import React, {useContext, useEffect, useRef, useState} from "react";
-import {Button} from "react-bootstrap";
+import React, {useContext, useEffect, useMemo, useRef, useState} from "react";
 import {Redirect} from "react-router";
 import "./css/NovelReadPage.css";
 import {Box, IconButton, Menu, MenuButton, MenuItem, MenuList} from "@chakra-ui/react";
-import {AiOutlineArrowLeft, DiAptana} from "react-icons/all";
+import {AiOutlineArrowLeft, BsFillFileTextFill, DiAptana} from "react-icons/all";
 import {SketchPicker} from "react-color";
 import {SettingContext} from "../App";
+import {ArrowLeftIcon, ArrowRightIcon} from '@chakra-ui/icons'
+import {FixedSizeList} from 'react-window';
+
+const ColorContext = React.createContext({bg: '#000', font: '#FFF'})
+const ChapterIndexContext = React.createContext(0)
 
 function NovelReadPage(props) {
     const settingContext = useContext(SettingContext)
@@ -20,15 +24,11 @@ function NovelReadPage(props) {
     const [fontColorPick, setFontColorPick] = useState(false)
     const [pickColor, setPickColor] = useState('#000')
     const [viewChapter, setViewChapter] = useState({title: '', content: 'loading'})
-    const novel = useRef({information: {}, chapters: []})
+    const novel = useRef({information: {}, chapters: [], titleList: []})
     const numberOfChapters = useRef(0)
     const updateColor = useRef()
     const contentRef = useRef(undefined)
     const completeRef = useRef(false)
-    // const recordRef = useRef({
-    //     backgroundColor: settingContext.reading_background_color,
-    //     fontColor: settingContext.reading_font_color
-    // })
 
     async function updateReading() {
         const options = {
@@ -112,7 +112,7 @@ function NovelReadPage(props) {
                 }
             }
             numberOfChapters.current = data.length
-            novel.current = {information: tempNovel, chapters: data}
+            novel.current = {information: tempNovel, chapters: data, titleList: data.map(item => item.chapter_name)}
             setChapterIndex(index)
             setViewChapter({title: data[index].chapter_name, content: data[index].chapter_content})
             completeRef.current = true
@@ -132,79 +132,146 @@ function NovelReadPage(props) {
         return <p>{s}</p>
     })
     const element = (
-        <Box className="NovelReadPage" style={{backgroundColor: backgroundColor, color: fontColor}}>
-            <Box className="TitleBar">
-                <IconButton className="GoBackButton" onClick={() => {
-                    goBack()
-                }} bg={backgroundColor} _hover={{bg: {backgroundColor}}} aria-label={"goBack"}
-                            icon={<AiOutlineArrowLeft/>}>
-                </IconButton>
-                <h1>{viewChapter.title}</h1>
-                <Box className="PageChangeBar" position={"relative"}>
-                    <Menu closeOnSelect={false} onClose={() => {
-                        setBackgroundColorPick(false);
-                        setFontColorPick(false);
-                    }}>
-                        < MenuButton
-                            as={IconButton}
-                            aria-label="Options"
-                            icon={<DiAptana/>}
-                            variant="ghost"
-                            height="100%"
-                            _hover={{bg: {backgroundColor}}} _focus={{bg: {backgroundColor}}}
-                            _expanded={{bg: {backgroundColor}}}
-                        />
-                        <MenuList backgroundColor={backgroundColor} color={fontColor}>
-                            <MenuItem onClick={() => {
-                                updateColor.current = (color) => {
-                                    setBackgroundColor(color);
-                                    setPickColor(color)
-                                }
-                                setFontColorPick(false)
-                                setBackgroundColorPick(!backgroundColorPick)
-                            }}
-                                      _focus={{bg: {backgroundColor}}}
-                                      _hover={{bg: {backgroundColor}}}
-                            >
-                                background color
-                            </MenuItem>
-                            <MenuItem onClick={() => {
-                                updateColor.current = (color) => {
-                                    setFontColor(color);
-                                    setPickColor(color)
-                                }
-                                setBackgroundColorPick(false)
-                                setFontColorPick(!fontColorPick)
-                            }}
-                                      _hover={{bg: {backgroundColor}}}
-                                      _focus={{bg: {backgroundColor}}}>
-                                font color
-                            </MenuItem>
-                            {(fontColorPick || backgroundColorPick) &&
-                            <SketchPicker color={pickColor} onChange={color => updateColor.current(color.hex)}
-                                          className={"ColorPicker"}/>}
-                        </MenuList>
-                    </Menu>
-                    {chapterIndex > 0 &&
-                    <Button variant="outline-secondary" onClick={() => {
-                        setChapterIndex(chapterIndex - 1)
-                    }}
-                            style={{color: fontColor, backgroundColor: backgroundColor}}>上一頁</Button>}
-                    {chapterIndex < numberOfChapters.current &&
-                    <Button variant="outline-secondary" onClick={() => {
-                        setChapterIndex(chapterIndex + 1)
-                    }}
-                            style={{color: fontColor, backgroundColor: backgroundColor}}>下一頁</Button>}
+        <ColorContext.Provider value={{bg: {backgroundColor}, font: {fontColor}}}>
+            <Box className="NovelReadPage" style={{backgroundColor: backgroundColor, color: fontColor}}>
+                <Box className="TitleBar">
+                    <IconButton className="GoBackButton" onClick={() => {
+                        goBack()
+                    }} bg={backgroundColor} _hover={{bg: {backgroundColor}}} aria-label={"goBack"}
+                                icon={<AiOutlineArrowLeft/>}>
+                    </IconButton>
+                    <h1>{viewChapter.title}</h1>
+                    <Box className="PageChangeBar" position={"relative"}>
+                        <Menu closeOnSelect={false} onClose={() => {
+                            setBackgroundColorPick(false);
+                            setFontColorPick(false);
+                        }}>
+                            < MenuButton
+                                as={IconButton}
+                                aria-label="Options"
+                                icon={<DiAptana/>}
+                                variant="ghost"
+                                height="100%"
+                                _hover={{bg: {backgroundColor}}} _focus={{bg: {backgroundColor}}}
+                                _expanded={{bg: {backgroundColor}}}
+                            />
+                            <MenuList backgroundColor={backgroundColor} color={fontColor}>
+                                <MenuItem onClick={() => {
+                                    updateColor.current = (color) => {
+                                        setBackgroundColor(color);
+                                        setPickColor(color)
+                                    }
+                                    setFontColorPick(false)
+                                    setBackgroundColorPick(!backgroundColorPick)
+                                }}
+                                          _focus={{bg: {backgroundColor}}}
+                                          _hover={{bg: {backgroundColor}}}
+                                >
+                                    background color
+                                </MenuItem>
+                                <MenuItem onClick={() => {
+                                    updateColor.current = (color) => {
+                                        setFontColor(color);
+                                        setPickColor(color)
+                                    }
+                                    setBackgroundColorPick(false)
+                                    setFontColorPick(!fontColorPick)
+                                }}
+                                          _hover={{bg: {backgroundColor}}}
+                                          _focus={{bg: {backgroundColor}}}>
+                                    font color
+                                </MenuItem>
+                                {(fontColorPick || backgroundColorPick) &&
+                                <SketchPicker color={pickColor} onChange={color => updateColor.current(color.hex)}
+                                              className={"ColorPicker"}/>}
+                            </MenuList>
+                        </Menu>
+                        <ChapterIndexContext.Provider value={chapterIndex}>
+                            <IndexMenu chapters={novel.current.titleList}/>
+                        </ChapterIndexContext.Provider>
+                        {chapterIndex > 0 &&
+                        <IconButton onClick={() => {
+                            setChapterIndex(chapterIndex - 1)
+                        }}
+                                    bg={backgroundColor} _hover={{bg: {backgroundColor}}}
+                                    _focus={{bg: {backgroundColor}}}
+                                    icon={<ArrowLeftIcon/>}
+                                    aria-label={"previousPage"}/>}
+                        {chapterIndex < numberOfChapters.current &&
+                        <IconButton onClick={() => {
+                            setChapterIndex(chapterIndex + 1)
+                        }}
+                                    bg={backgroundColor} _hover={{bg: {backgroundColor}}}
+                                    _focus={{bg: {backgroundColor}}}
+                                    icon={<ArrowRightIcon/>}
+                                    aria-label={"nextPage"}/>}
+                    </Box>
+                </Box>
+                <hr/>
+                <Box className="NovelContent" ref={node => contentRef.current = node}>
+                    {contentItem}
                 </Box>
             </Box>
-            <hr/>
-            <Box className="NovelContent" ref={node => contentRef.current = node}>
-                {contentItem}
-            </Box>
-        </Box>
+        </ColorContext.Provider>
     );
 
     return isGoBack ? goBackRedirect : element;
+}
+
+function IndexMenu(props) {
+    const color = useContext(ColorContext)
+    const index = useContext(ChapterIndexContext)
+    const [bgColor] = useState(color.bg)
+    const [fontColor] = useState(color.font)
+    const [listView, setListView] = useState(false)
+    const listRef = useRef(undefined)
+    const row = useRef(undefined)
+    // const [listItem, setListItem] = useState(undefined)
+    const memos = useMemo(() => {
+        return {
+            chapters: props.chapters
+        }
+    }, [props.chapters])
+    useEffect(() => {
+        row.current = ({index, style}) => {
+            return (
+                <div style={style}><p
+                    style={{
+                        overflow: 'none',
+                        whiteSpace: 'nowrap',
+                        textOverflow: 'hidden',
+                        textAlign: 'left'
+                    }}>{memos.chapters[index]}</p>
+                </div>
+            )
+        }
+    }, [memos.chapters])
+    useEffect(() => {
+        if (listView === true) {
+            const el = document.querySelector(".IndexList")
+            el.scrollTop = (index * 70);
+        }
+    }, [index, listView])
+    return (
+        <div className="IndexMenu" style={{position: 'relative'}}>
+            <IconButton icon={<BsFillFileTextFill/>} onClick={() => {
+                setListView(!listView)
+            }} onBlur={() => setListView(false)}
+                        _focus={{bg: {bgColor}}} bg={bgColor} _hover={{bg: {bgColor}}}
+                        _expanded={{bg: {bgColor}}} aria-label={"IndexButton"}/>
+
+            {listView && <FixedSizeList className={"IndexList"} height={500} width={300} itemSize={70} ref={listRef}
+                                        style={{
+                                            position: 'absolute',
+                                            top: '100%',
+                                            right: '100%',
+                                            zIndex: '100',
+                                            backgroundColor: {bgColor},
+                                            color: {fontColor},
+                                        }}
+                                        itemCount={memos.chapters.length}>{row.current}</FixedSizeList>}
+        </div>
+    )
 }
 
 export default NovelReadPage;
