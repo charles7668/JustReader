@@ -136,19 +136,23 @@ function NovelReadPage(props) {
             <Box className="TitleBar">
                 <IconButton className="GoBackButton" onClick={() => {
                     goBack()
-                }} bg={backgroundColor} aria-label={"goBack"} icon={<AiOutlineArrowLeft/>}>
+                }} bg={backgroundColor} _hover={{bg: {backgroundColor}}} aria-label={"goBack"}
+                            icon={<AiOutlineArrowLeft/>}>
                 </IconButton>
                 <h1>{viewChapter.title}</h1>
                 <Box className="PageChangeBar" position={"relative"}>
-                    <Menu closeOnSelect={false}>
+                    <Menu closeOnSelect={false} onClose={() => {
+                        setBackgroundColorPick(false);
+                        setFontColorPick(false);
+                    }}>
                         < MenuButton
                             as={IconButton}
                             aria-label="Options"
                             icon={<DiAptana/>}
                             variant="ghost"
                             height="100%"
-                            _hover={{bg: "gray.400"}} _focus={{bg: "gray.400"}}
-                            _expanded={{bg: "gray.400"}}
+                            _hover={{bg: {backgroundColor}}} _focus={{bg: {backgroundColor}}}
+                            _expanded={{bg: {backgroundColor}}}
                         />
                         <MenuList backgroundColor={backgroundColor} color={fontColor}>
                             <MenuItem onClick={() => {
@@ -159,8 +163,8 @@ function NovelReadPage(props) {
                                 setFontColorPick(false)
                                 setBackgroundColorPick(!backgroundColorPick)
                             }}
-                                      _focus={{bg: "gray.400"}}
-                                      _hover={{bg: "gray.400"}}
+                                      _focus={{bg: {backgroundColor}}}
+                                      _hover={{bg: {backgroundColor}}}
                             >
                                 background color
                             </MenuItem>
@@ -172,8 +176,8 @@ function NovelReadPage(props) {
                                 setBackgroundColorPick(false)
                                 setFontColorPick(!fontColorPick)
                             }}
-                                      _hover={{bg: "gray.400"}}
-                                      _focus={{bg: "gray.400"}}>
+                                      _hover={{bg: {backgroundColor}}}
+                                      _focus={{bg: {backgroundColor}}}>
                                 font color
                             </MenuItem>
                             {(fontColorPick || backgroundColorPick) &&
