@@ -4,7 +4,7 @@
 import React, {useContext, useEffect, useMemo, useRef, useState} from "react";
 import {Redirect} from "react-router";
 import "./css/NovelReadPage.css";
-import {Box, IconButton, Menu, MenuButton, MenuItem, MenuList} from "@chakra-ui/react";
+import {Box, Center, IconButton, Menu, MenuButton, MenuItem, MenuList} from "@chakra-ui/react";
 import {AiOutlineArrowLeft, BsFillFileTextFill, DiAptana} from "react-icons/all";
 import {SketchPicker} from "react-color";
 import {SettingContext} from "../App";
@@ -132,7 +132,7 @@ function NovelReadPage(props) {
         return <p>{s}</p>
     })
     const element = (
-        <ColorContext.Provider value={{bg: {backgroundColor}, font: {fontColor}}}>
+        <ColorContext.Provider value={{bg: backgroundColor, font: fontColor}}>
             <Box className="NovelReadPage" style={{backgroundColor: backgroundColor, color: fontColor}}>
                 <Box className="TitleBar">
                     <IconButton className="GoBackButton" onClick={() => {
@@ -187,7 +187,9 @@ function NovelReadPage(props) {
                             </MenuList>
                         </Menu>
                         <ChapterIndexContext.Provider value={chapterIndex}>
-                            <IndexMenu chapters={novel.current.titleList}/>
+                            <IndexMenu chapters={novel.current.titleList} changeIndex={(i) => {
+                                setChapterIndex(i)
+                            }}/>
                         </ChapterIndexContext.Provider>
                         {chapterIndex > 0 &&
                         <IconButton onClick={() => {
@@ -226,7 +228,7 @@ function IndexMenu(props) {
     const [listView, setListView] = useState(false)
     const listRef = useRef(undefined)
     const row = useRef(undefined)
-    // const [listItem, setListItem] = useState(undefined)
+    const functionRef = useRef({changeIndex: props.changeIndex})
     const memos = useMemo(() => {
         return {
             chapters: props.chapters
@@ -235,42 +237,61 @@ function IndexMenu(props) {
     useEffect(() => {
         row.current = ({index, style}) => {
             return (
-                <div style={style}><p
-                    style={{
-                        overflow: 'none',
-                        whiteSpace: 'nowrap',
-                        textOverflow: 'hidden',
-                        textAlign: 'left'
-                    }}>{memos.chapters[index]}</p>
-                </div>
+                <Center style={style} _hover={{cursor: 'pointer'}}
+                        onMouseDown={(e) => {
+                            e.preventDefault()
+                        }}
+                        onClick={() => {
+                            functionRef.current.changeIndex(index)
+                        }}
+                >
+                    <p
+                        style={{
+                            width: '100%',
+                            overflow: 'none',
+                            whiteSpace: 'nowrap',
+                            textOverflow: 'hidden',
+                            textAlign: 'left',
+                            fontSize: '24px'
+                        }}>{memos.chapters[index]}</p>
+                </Center>
             )
         }
     }, [memos.chapters])
     useEffect(() => {
         if (listView === true) {
             const el = document.querySelector(".IndexList")
-            el.scrollTop = (index * 70);
+            el.scrollTop = (index * 30);
         }
     }, [index, listView])
-    return (
-        <div className="IndexMenu" style={{position: 'relative'}}>
-            <IconButton icon={<BsFillFileTextFill/>} onClick={() => {
-                setListView(!listView)
-            }} onBlur={() => setListView(false)}
-                        _focus={{bg: {bgColor}}} bg={bgColor} _hover={{bg: {bgColor}}}
-                        _expanded={{bg: {bgColor}}} aria-label={"IndexButton"}/>
 
-            {listView && <FixedSizeList className={"IndexList"} height={500} width={300} itemSize={70} ref={listRef}
+    return (
+        <Box className="IndexMenu" position={'relative'} margin={'0'} padding={'0'} display={'flex'}
+             alignContent={"center"}>
+            <IconButton
+                icon={<BsFillFileTextFill/>}
+                onClick={() => {
+                    setListView(!listView)
+                }}
+                onBlur={() => {
+                    setListView(false)
+                }}
+                _focus={{bg: {bgColor}}} bg={bgColor} _hover={{bg: {bgColor}}}
+                _expanded={{bg: {bgColor}}} aria-label={"IndexButton"}/>
+
+            {listView && <FixedSizeList className={"IndexList"} height={500} width={300} itemSize={30} ref={listRef}
                                         style={{
+                                            cursor: 'pointer',
                                             position: 'absolute',
                                             top: '100%',
                                             right: '100%',
                                             zIndex: '100',
-                                            backgroundColor: {bgColor},
-                                            color: {fontColor},
+                                            backgroundColor: `${bgColor}`,
+                                            color: `${fontColor}`,
+                                            border: '1px solid'
                                         }}
                                         itemCount={memos.chapters.length}>{row.current}</FixedSizeList>}
-        </div>
+        </Box>
     )
 }
 
