@@ -19,3 +19,7 @@ run `node build.js` in terminal , output folder is `build_electron`
 # golang build
 
 [click me](go%20build.md)
+
+# 目前支援小說格式說明
+
+[click me](docs/novel%20format.md)
