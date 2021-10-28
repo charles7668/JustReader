@@ -38,7 +38,7 @@ function NovelList() {
             />
         )
     });
-    return <HStack className="NovelList" spacing="20px" wrap="wrap">{ListItem}
+    return <HStack className="NovelList" spacing="20px" wrap="wrap" alignItems={'start'} alignContent={'flex-start'} paddingLeft={'10px'} paddingRight={'10px'}>{ListItem}
         <div className="LastElement"/>
     </HStack>;
 }

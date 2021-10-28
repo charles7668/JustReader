@@ -70,7 +70,7 @@ function NovelItem(props) {
                 <p>{novel.last_chapter}</p>
                 <p>簡介:</p>
                 <p className="NovelBrief"
-                   dangerouslySetInnerHTML={{__html: novel.brief?.replaceAll('\n', '<br>')}}/>
+                   dangerouslySetInnerHTML={{__html: novel.brief?.replaceAll('\n', '<br/>')}}/>
             </div>
             <div className="NovelActionBar">
                 <Button variant="outline-primary"

@@ -6,7 +6,7 @@
 }
 
 .NovelItem > .NovelCover {
-    width: 250px;
+    width: 150px;
     background-color: black;
 }
 
@@ -39,7 +39,10 @@
 }
 
 .NovelItem .NovelBrief {
-    overflow: fragments;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
     text-overflow: ellipsis;
     flex: 1;
 }
