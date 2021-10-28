@@ -12,7 +12,7 @@ function NovelList() {
     const [novelList, setNovelList] = useState([])
     const [searchText, setSearchText] = useState('')
     const [update, forceUpdate] = useForceUpdate()
-    let list
+    const [listItem, setListItem] = useState(undefined)
 
     useEffect(() => {
         window.searchTextChange = (text) => {
@@ -20,6 +20,7 @@ function NovelList() {
         }
         window.updateNovelList = () => forceUpdate()
     }, [forceUpdate])
+
     useEffect(() => {
         async function getList() {
             return await fetch(window.serverURL + "novels")
@@ -28,17 +29,25 @@ function NovelList() {
 
         getList().then(data => setNovelList(Array.isArray(data) ? data : []))
     }, [update])
-    list = novelList.filter(novel => novel.name.includes(searchText))
-    const ListItem = list.map((novel) => {
-        return (
-            <NovelItem
-                key={novel}
-                novelInformation={novel}
-                update={forceUpdate}
-            />
-        )
-    });
-    return <HStack className="NovelList" spacing="20px" wrap="wrap" alignItems={'start'} alignContent={'flex-start'} paddingLeft={'10px'} paddingRight={'10px'}>{ListItem}
+
+    useEffect(() => {
+        console.log('change')
+        const list = novelList.filter(novel => novel.name.includes(searchText))
+        console.log(list)
+        setListItem(list.map((novel) => {
+            console.log(novel.name)
+            return (
+                <NovelItem
+                    key={novel.id}
+                    novelInformation={novel}
+                    update={forceUpdate}
+                />
+            )
+        }))
+    }, [forceUpdate, novelList, searchText])
+
+    return <HStack className="NovelList" spacing="20px" wrap="wrap" alignItems={'start'} alignContent={'flex-start'}
+                   paddingLeft={'10px'} paddingRight={'10px'}>{listItem}
         <div className="LastElement"/>
     </HStack>;
 }

@@ -7,14 +7,16 @@ import {HamburgerIcon} from "@chakra-ui/icons";
 import LoadingPage from "./LoadingPage";
 
 function NavigationBar() {
+    const inputRef = useRef()
     const search = () => {
-        const element = document.querySelector("#NavigationBar > input");
-        window.updateNovelList(element.value);
+        // noinspection JSUnresolvedVariable
+        window.searchTextChange(inputRef.current.value);
     }
     return (
         <Box className="NavigationBar" paddingTop={'1px'}>
             <SettingMenu/>
-            <Input placeholder="input search text to search title" border={'1px solid'} borderColor={'black'}/>
+            <Input placeholder="input search text to search title" border={'1px solid'} borderColor={'black'}
+                   ref={inputRef}/>
             <Button onClick={search}>Search</Button>
         </Box>
     );
@@ -32,7 +34,6 @@ function SettingMenu() {
             method: 'POST',
             body: formData,
         }
-        console.log(formData)
         fetch(window.serverURL + "novels", options).then(response => ({
             status: response.status,
             data: response
