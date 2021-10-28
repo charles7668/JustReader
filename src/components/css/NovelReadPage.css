@@ -14,6 +14,10 @@
 .NovelReadPage .TitleBar h1 {
     margin: 0;
     padding: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: 24px;
 }
 
 .NovelReadPage .TitleBar > Button {
@@ -71,4 +75,12 @@
     position: absolute;
     right: 100%;
     top: 0;
+}
+
+@media (max-width: 600px) {
+    .NovelReadPage .ColorPicker {
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
 }
