@@ -5,7 +5,7 @@ const {spawn} = require('child_process')
 let server_process
 
 function createWindow() {
-    const win = new BrowserWindow({width: 500, height: 800, autoHideMenuBar: false})
+    const win = new BrowserWindow({width: 500, height: 800, autoHideMenuBar: true})
     const readCallBack = (err, data) => {
         if (process.env.NODE_SERVER_PATH !== undefined) {
             const url = process.env.NODE_SERVER_PATH
