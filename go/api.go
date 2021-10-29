@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/charles7668/novel-reader/services/AppSetting"
+	"github.com/charles7668/novel-reader/services/Scraper"
 	"github.com/charles7668/novel-reader/services/file_operation"
 	"github.com/charles7668/novel-reader/services/novel"
 	"io/ioutil"
@@ -247,6 +248,31 @@ func getSetting(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, setting)
 }
 
+//searchCover search cover
+func searchCover(c *gin.Context) {
+	var body map[string]string
+	bodyData, err := ioutil.ReadAll(c.Request.Body)
+	fmt.Println(c.Request.Body)
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "Param error"})
+		return
+	}
+	err = json.Unmarshal(bodyData, &body)
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "Param error"})
+		return
+	}
+	searchKey, exist := body["search_key"]
+	if exist {
+		//var searchKey string
+		//err = json.Unmarshal(body["search_key"], &searchKey)
+		results := Scraper.SearchCover(string(searchKey))
+		c.IndentedJSON(http.StatusOK, results)
+	} else {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "search key is empty"})
+	}
+}
+
 var StaticFilePath = "../build"
 
 //main entry point
@@ -285,12 +311,14 @@ func main() {
 	_ = ioutil.WriteFile("server.json", []byte(str), 0666)
 	novel.Init(novel.InitStructure{DBHandle: db, Logger: logger})
 	AppSetting.Init(AppSetting.InitStructure{Logger: logger, Database: db})
+	Scraper.Init(logger)
 	router := gin.Default()
 	router.Use(Cors())
 	router.Use(static.Serve("/", static.LocalFile(StaticFilePath, true)))
 	router.GET("/novels", getNovels)
 	router.GET("/novels/:id", getNovelChapterByID)
 	router.GET("/setting", getSetting)
+	router.POST("/search_cover", searchCover)
 	router.POST("/update_time/:rowID", updateAccessTimeByID)
 	router.POST("/update_reading/:rowID", updateReadingByID)
 	router.POST("/delete/:rowID", deleteNovelByID)
@@ -334,4 +362,12 @@ func Cors() gin.HandlerFunc {
 		}
 		c.Next()
 	}
+}
+
+func checkError(err error) bool {
+	if err != nil {
+		logger.Println(err)
+		return true
+	}
+	return false
 }
