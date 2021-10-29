@@ -17,18 +17,18 @@ function App() {
         })
     }, [])
     return (
-        <SettingContext.Provider value={setting}>
-            <div className="App">
+        <div className="App">
+            <SettingContext.Provider value={setting}>
                 <HashRouter>
                     <Route
                         path="/"
                         exact
-                        component={() => <MainPage/>}
+                        component={MainPage}
                     />
                     <Route path="/novel" component={NovelReadPage}/>
                 </HashRouter>
-            </div>
-        </SettingContext.Provider>
+            </SettingContext.Provider>
+        </div>
     );
 }
 

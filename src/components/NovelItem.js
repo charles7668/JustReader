@@ -3,8 +3,9 @@
 import React, {useEffect, useState} from "react";
 import "./css/NovelItem.css";
 import {Redirect} from "react-router-dom";
-import {Button} from "react-bootstrap";
 import LoadingPage from "./LoadingPage";
+import {Box, Menu, MenuButton, IconButton, MenuItem, MenuList} from "@chakra-ui/react";
+import {SettingsIcon} from "@chakra-ui/icons";
 
 function NovelItem(props) {
     const [novelView, setNovelView] = useState(false)
@@ -55,13 +56,21 @@ function NovelItem(props) {
         <Redirect to={{pathname: redirectPath, state: {novel: novel}}}/>
     )
     const element = (
-        <div className="NovelItem">
-            <div className="NovelCover">
+        <Box className="NovelItem">
+            <Box className="NovelCover" position={"relative"}>
                 <img
                     src={src}
                     alt="no cover"
                 />
-            </div>
+                <Menu>
+                    <MenuButton as={IconButton} icon={<SettingsIcon/>} position={"absolute"} right={'0'} bottom={'0'}
+                                backgroundColor={"transparent"} color={"white"}/>
+                    <MenuList>
+                        <MenuItem onClick={uploadCover}>上傳圖片</MenuItem>
+                        <MenuItem onClick={deleteItem}>Delete</MenuItem>
+                    </MenuList>
+                </Menu>
+            </Box>
             <div className="NovelInformation">
                 <p onClick={() => {
                     setNovelView(true)
@@ -72,17 +81,8 @@ function NovelItem(props) {
                 <p className="NovelBrief"
                    dangerouslySetInnerHTML={{__html: novel.brief?.replaceAll('\n', '<br/>')}}/>
             </div>
-            <div className="NovelActionBar">
-                <Button variant="outline-primary"
-                        onClick={() => {
-                            uploadCover()
-                        }}>上傳圖片</Button>
-                <Button variant="outline-secondary" onClick={() => {
-                    deleteItem()
-                }}>Delete</Button>
-            </div>
             {loading === true && <LoadingPage text={"uploading"}/>}
-        </div>
+        </Box>
     );
     return novelView ? redirect : element;
 }

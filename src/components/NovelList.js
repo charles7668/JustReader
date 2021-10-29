@@ -1,5 +1,5 @@
 import NovelItem from "./NovelItem";
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import './css/NovelList.css'
 import {HStack} from "@chakra-ui/react";
 
@@ -9,10 +9,22 @@ function useForceUpdate() {
 }
 
 function NovelList() {
-    const [novelList, setNovelList] = useState([])
     const [searchText, setSearchText] = useState('')
     const [update, forceUpdate] = useForceUpdate()
-    const [listItem, setListItem] = useState(undefined)
+    const [novelList, setNovelList] = useState([])
+
+    const listItem = useMemo(() => {
+        const list = novelList.filter(novel => novel.name.includes(searchText))
+        return list.map((novel) => {
+            return (
+                <NovelItem
+                    key={novel.id}
+                    novelInformation={novel}
+                    update={forceUpdate}
+                />
+            )
+        })
+    }, [forceUpdate, novelList, searchText])
 
     useEffect(() => {
         window.searchTextChange = (text) => {
@@ -22,29 +34,9 @@ function NovelList() {
     }, [forceUpdate])
 
     useEffect(() => {
-        async function getList() {
-            return await fetch(window.serverURL + "novels")
-                .then((response) => response.json())
-        }
-
-        getList().then(data => setNovelList(Array.isArray(data) ? data : []))
+        fetch(window.serverURL + "novels")
+            .then((response) => response.json()).then(data => setNovelList(Array.isArray(data) ? data : []))
     }, [update])
-
-    useEffect(() => {
-        console.log('change')
-        const list = novelList.filter(novel => novel.name.includes(searchText))
-        console.log(list)
-        setListItem(list.map((novel) => {
-            console.log(novel.name)
-            return (
-                <NovelItem
-                    key={novel.id}
-                    novelInformation={novel}
-                    update={forceUpdate}
-                />
-            )
-        }))
-    }, [forceUpdate, novelList, searchText])
 
     return <HStack className="NovelList" spacing="20px" wrap="wrap" alignItems={'start'} alignContent={'flex-start'}
                    paddingLeft={'10px'} paddingRight={'10px'}>{listItem}

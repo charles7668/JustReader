@@ -1,5 +1,4 @@
 // noinspection JSUnresolvedVariable
-// noinspection JSUnresolvedVariable
 
 import React, {useContext, useEffect, useMemo, useRef, useState} from "react";
 import {Redirect} from "react-router";
