@@ -2,6 +2,7 @@ import NovelItem from "./NovelItem";
 import React, {useEffect, useMemo, useState} from "react";
 import './css/NovelList.css'
 import {HStack} from "@chakra-ui/react";
+import CoverSelect from "./CoverSelect";
 
 function useForceUpdate() {
     const [counter, setCounter] = useState(0)
@@ -12,7 +13,8 @@ function NovelList() {
     const [searchText, setSearchText] = useState('')
     const [update, forceUpdate] = useForceUpdate()
     const [novelList, setNovelList] = useState([])
-
+    const [coverSelectOpen, setColorSelectOpen] = useState(false)
+    const [coverSelectName, setCoverSelectName] = useState("")
     const listItem = useMemo(() => {
         const list = novelList.filter(novel => novel.name.includes(searchText))
         return list.map((novel) => {
@@ -21,6 +23,10 @@ function NovelList() {
                     key={novel.id}
                     novelInformation={novel}
                     update={forceUpdate}
+                    coverSelect={() => {
+                        setCoverSelectName(novel.name)
+                        setColorSelectOpen(true)
+                    }}
                 />
             )
         })
@@ -41,6 +47,7 @@ function NovelList() {
     return <HStack className="NovelList" spacing="20px" wrap="wrap" alignItems={'start'} alignContent={'flex-start'}
                    paddingLeft={'10px'} paddingRight={'10px'}>{listItem}
         <div className="LastElement"/>
+        <CoverSelect name={coverSelectName} isOpen={coverSelectOpen} onClose={() => setColorSelectOpen(false)}/>
     </HStack>;
 }
 

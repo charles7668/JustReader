@@ -131,9 +131,20 @@ func parseByRule(rule *Rule, searchTitle string) []Novel {
 			}
 			requestBody.Add(key, converted)
 		}
-		req, err := http.NewRequest(rule.Request.Method, rule.Request.URL, strings.NewReader(requestBody.Encode()))
-		if checkError(err) {
-			continue
+		var req *http.Request
+		if rule.Request.Method == "GET" {
+			var err error
+			req, err = http.NewRequest(rule.Request.Method, rule.Request.URL, nil)
+			if checkError(err) {
+				continue
+			}
+			req.URL.RawQuery = requestBody.Encode()
+		} else {
+			var err error
+			req, err = http.NewRequest(rule.Request.Method, rule.Request.URL, strings.NewReader(requestBody.Encode()))
+			if checkError(err) {
+				continue
+			}
 		}
 		for key, value := range rule.Request.Header {
 			req.Header.Add(key, value)
@@ -170,9 +181,7 @@ func parseByRule(rule *Rule, searchTitle string) []Novel {
 				if converted == "" {
 					converted = informationUrl
 				}
-				if strings.HasPrefix(converted, "/") {
-					converted = strings.TrimSuffix(rule.SourceURL, "/") + converted
-				}
+				converted = urlComplete(rule.SourceURL, converted)
 				list = append(list, converted)
 			} else {
 				list = append(list, informationUrl)
@@ -224,15 +233,27 @@ func parseByRule(rule *Rule, searchTitle string) []Novel {
 			} else {
 				cover = element.First().Text()
 			}
-			if strings.HasPrefix(cover, "/") {
-				cover = strings.TrimSuffix(rule.SourceURL, "/") + cover
-			}
+			cover = urlComplete(rule.SourceURL, cover)
 			result.Cover = cover
 		}
 		novelResults = append(novelResults, result)
 		responseBodyClose(res.Body)
 	}
 	return novelResults
+}
+
+//urlComplete complete url
+func urlComplete(source string, destination string) string {
+	var result string
+	if strings.HasPrefix(destination, "//") {
+		result = strings.Split(source, "//")[0] + destination
+	} else if strings.HasPrefix(destination, "/") {
+		result = strings.TrimSuffix(source, "/") + destination
+	}
+	result = strings.ReplaceAll(result, "\n", "")
+	result = strings.ReplaceAll(result, " ", "")
+	result = strings.ReplaceAll(result, "\t", "")
+	return result
 }
 
 //checkError handle error and return true if error exist
