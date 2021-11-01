@@ -6,6 +6,7 @@ import {Redirect} from "react-router-dom";
 import LoadingPage from "./LoadingPage";
 import {Box, Menu, MenuButton, IconButton, MenuItem, MenuList} from "@chakra-ui/react";
 import {SettingsIcon} from "@chakra-ui/icons";
+import CoverSelect from "./CoverSelect";
 
 function NovelItem(props) {
     const [novelView, setNovelView] = useState(false)
@@ -68,6 +69,7 @@ function NovelItem(props) {
                     <MenuList>
                         <MenuItem onClick={uploadCover}>上傳圖片</MenuItem>
                         <MenuItem onClick={deleteItem}>Delete</MenuItem>
+                        <MenuItem onClick={props.coverSelect}>test</MenuItem>
                     </MenuList>
                 </Menu>
             </Box>
