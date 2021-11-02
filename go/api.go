@@ -35,6 +35,7 @@ const (
 	Success = 0
 	ParamError
 	DatabaseOperationError
+	Other
 )
 
 type ServerSetting struct {
@@ -65,39 +66,54 @@ func getNovelChapterByID(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, chapters)
 }
 
+//getNovelByID	using MD5 string to select novel
+func getNovelByID(c *gin.Context) {
+	rowID, err := strconv.Atoi(c.Param("id"))
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "param error"})
+		return
+	}
+	information, err := novel.GetNovel(rowID)
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: DatabaseOperationError, Message: "database error"})
+		return
+	}
+	c.IndentedJSON(http.StatusOK, information)
+}
+
 //addNovels url : /novels/ , Method : POST
 //add novel file to database
 func addNovels(c *gin.Context) {
-	logger.Println("POST : add novels")
+	logger.Println("func enter : main/addNovels")
+	defer logger.Println("func exit : main/addNovels")
 	file, err := c.FormFile("file")
-	if err != nil {
-		logger.Fatalln(err)
-		c.IndentedJSON(http.StatusBadRequest, novel.Information{})
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "param error"})
 		return
 	}
 	fileName := file.Filename
 	exist := novel.CheckNovelExist(fileName)
 	if exist {
 		logger.Println(fileName + " is exist")
-		c.IndentedJSON(http.StatusAlreadyReported, novel.Information{})
+		c.IndentedJSON(http.StatusAlreadyReported, Message{Status: DatabaseOperationError, Message: "file already exist"})
 		return
 	}
 	logger.Println(fileName)
 	err = c.SaveUploadedFile(file, fileName)
-	if err != nil {
-		logger.Fatalln(err)
-		c.IndentedJSON(http.StatusBadRequest, novel.Information{})
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "can't save image"})
 		return
 	}
 	information, err := novel.AddNovel(fileName)
-	fileErr := file_operation.DeleteFile(fileName)
-	logger.Print("delete file err : ")
-	logger.Println(fileErr)
-	if err != nil {
-		c.IndentedJSON(http.StatusMethodNotAllowed, novel.Information{})
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: DatabaseOperationError, Message: "database error"})
 		return
 	}
-	logger.Println("POST novels success")
+	err = file_operation.DeleteFile(fileName)
+	if checkError(err) {
+		c.IndentedJSON(http.StatusMethodNotAllowed, Message{Status: Other, Message: "file operation error"})
+		return
+	}
 	c.IndentedJSON(http.StatusOK, information)
 }
 
@@ -162,7 +178,8 @@ func deleteNovelByID(c *gin.Context) {
 
 //addImageByID add image using row id
 func addImageByID(c *gin.Context) {
-	logger.Println("func enter : main addImageByID")
+	logger.Println("func enter : main/addImageByID")
+	defer logger.Println("func exit : main/addImageByID")
 	rowID, err := strconv.Atoi(c.Param("rowID"))
 	if err != nil {
 		logger.Fatalln(err)
@@ -206,7 +223,6 @@ func addImageByID(c *gin.Context) {
 		return
 	}
 	c.IndentedJSON(http.StatusOK, Message{Status: Success, Message: base64String})
-	logger.Println("func exit : main addImageByID")
 }
 
 func updateSetting(c *gin.Context) {
@@ -252,7 +268,6 @@ func getSetting(c *gin.Context) {
 func searchCover(c *gin.Context) {
 	var body map[string]string
 	bodyData, err := ioutil.ReadAll(c.Request.Body)
-	fmt.Println(c.Request.Body)
 	if checkError(err) {
 		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "Param error"})
 		return
@@ -273,6 +288,44 @@ func searchCover(c *gin.Context) {
 	}
 }
 
+//useNetImageByID use net image
+func useNetImageByID(c *gin.Context) {
+	logger.Println("func enter : main/useNetImageByID")
+	defer logger.Println("func exit : main/useNetImageByID")
+	rowID, err := strconv.Atoi(c.Param("rowID"))
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "param error"})
+		return
+	}
+	bodyData, err := ioutil.ReadAll(c.Request.Body)
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "param error"})
+		return
+	}
+	var jsonObject map[string]string
+	err = json.Unmarshal(bodyData, &jsonObject)
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "not valid json type"})
+		return
+	}
+	url, exist := jsonObject["url"]
+	if !exist {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "url param not found"})
+		return
+	}
+	base64String := Scraper.GetImageFromURLToBase64(url)
+	if base64String == "" {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "url string cannot download"})
+		return
+	}
+	err = novel.AddImage(rowID, base64String)
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "add image to database error"})
+		return
+	}
+	c.IndentedJSON(http.StatusOK, Message{Status: Success, Message: "Success"})
+}
+
 var StaticFilePath = "../build"
 
 //main entry point
@@ -280,14 +333,22 @@ func main() {
 	date := time.Now().Format("060102")
 	logWriter, err := os.OpenFile("./log"+date+".log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	logger = log.New(logWriter, "", log.Ldate|log.Ltime)
-	defer logWriter.Close()
+	defer func(logWriter *os.File) {
+		err = logWriter.Close()
+		if err != nil {
+			return
+		}
+	}(logWriter)
 	_, _ = file_operation.CreateFileIfNotExist("novel-reader.db")
 	logger.Println("open novel-reader.db")
 	db, err := sql.Open("sqlite3", "novel-reader.db")
 	if err != nil {
 		logger.Fatalln(err)
 	} else {
-		defer db.Close()
+		defer func(db *sql.DB) {
+			err = db.Close()
+			checkError(err)
+		}(db)
 		logger.Println("create NovelInformation table if not exist")
 		queryString := `CREATE TABLE IF NOT EXISTS NovelInformation
 							(
@@ -316,7 +377,8 @@ func main() {
 	router.Use(Cors())
 	router.Use(static.Serve("/", static.LocalFile(StaticFilePath, true)))
 	router.GET("/novels", getNovels)
-	router.GET("/novels/:id", getNovelChapterByID)
+	router.GET("/chapters/:id", getNovelChapterByID)
+	router.GET("/novels/:id", getNovelByID)
 	router.GET("/setting", getSetting)
 	router.POST("/search_cover", searchCover)
 	router.POST("/update_time/:rowID", updateAccessTimeByID)
@@ -324,6 +386,7 @@ func main() {
 	router.POST("/delete/:rowID", deleteNovelByID)
 	router.POST("/novels", addNovels)
 	router.POST("/cover/:rowID", addImageByID)
+	router.POST("/use_net_image/:rowID", useNetImageByID)
 	router.POST("/update_setting", updateSetting)
 	err = router.Run("localhost:8088")
 	if err != nil {

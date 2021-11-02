@@ -32,9 +32,9 @@ func checkNovelExist(fileName string) bool {
 //addNovel add novel to database
 func addNovel(fileName string) (Information, error) {
 	logger.Println("func enter : novel/db addNovel")
+	defer logger.Println("func exit : novel/db addNovel")
 	novel, err := getNovelInformation(fileName)
-	if err != nil {
-		logger.Fatalln(err)
+	if checkError(err) {
 		return novel.Information, err
 	}
 	logger.Println("prepare insert data")
@@ -55,16 +55,14 @@ func addNovel(fileName string) (Information, error) {
 		hash)
 
 	_, err = db.Exec(queryString)
-	if err != nil {
-		logger.Fatalln(err)
+	if checkError(err) {
 		return novel.Information, err
 	}
 	logger.Println("insert success")
 	logger.Println("create chapter table : " + hash)
 	queryString = "CREATE TABLE IF NOT EXISTS '" + hash + "' (ChapterName text,ChapterContent text)"
 	_, err = db.Exec(queryString)
-	if err != nil {
-		logger.Fatalln(err)
+	if checkError(err) {
 		return novel.Information, err
 	}
 	logger.Println("insert chapter data")
@@ -77,19 +75,16 @@ func addNovel(fileName string) (Information, error) {
 		queryString += str
 	}
 	_, err = db.Exec(queryString)
-	if err != nil {
-		logger.Fatalln(err)
+	if checkError(err) {
 		return novel.Information, err
 	}
 	logger.Println("query inserted novel")
 	queryString = "SELECT ROWID FROM NovelInformation WHERE MD5=" + "'" + novel.Information.MD5 + "'"
 	row := db.QueryRow(queryString)
-	row.Scan(&novel.Information.ID)
-	if err != nil {
-		logger.Fatalln("query data fail")
+	err = row.Scan(&novel.Information.ID)
+	if checkError(err) {
 		return novel.Information, errors.New("query data error")
 	}
-	logger.Println("func exit : novel/db addNovel")
 	return novel.Information, nil
 }
 
@@ -222,4 +217,28 @@ func addImage(rowID int, image string) error {
 	}
 	logger.Println("func exit : novel/db addImage")
 	return nil
+}
+
+//getNovel get novel by md5
+func getNovel(rowID int) (Information, error) {
+	logger.Println("func enter : novel/db/getNovel")
+	defer logger.Println("func exit : novel/db/getNovel")
+	queryString := fmt.Sprintf("SELECT ROWID, * from NovelInformation WHERE ROWID=%d", rowID)
+	var information Information
+	row := db.QueryRow(queryString)
+	err := row.Scan(&information.ID,
+		&information.Author,
+		&information.Brief,
+		&information.Name,
+		&information.CurrentChapter,
+		&information.LastChapter,
+		&information.FileName,
+		&information.LastAccess,
+		&information.CreateTime,
+		&information.MD5,
+		&information.Cover)
+	if checkError(err) {
+		return Information{}, err
+	}
+	return information, err
 }

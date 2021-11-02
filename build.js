@@ -22,6 +22,10 @@ const buildElectron = () => {
                 {
                     "from": "./go/server.exe",
                     "to": "../server.exe"
+                },
+                {
+                    "from": "./go/scraper",
+                    "to": "../scraper"
                 }
             ],
             "win": {},
@@ -35,11 +39,11 @@ const buildElectron = () => {
 
 const buildGoApp = () => {
     console.log('start build go app')
-    exec("cd go && go build -o server.exe -ldflags=\"-X 'main.StaticFilePath=resources/static'\"", (error) => {
+    exec("set GIN_MODE=release && cd go && go build -o server.exe -ldflags=\"-X 'main.StaticFilePath=resources/static'\"", (error) => {
         if (error !== null) {
             console.log(`exec error: ${error}`);
         }
-        console.log('build success')
+        console.log('go build end')
         buildElectron()
     })
 }

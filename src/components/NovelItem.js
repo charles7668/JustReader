@@ -46,14 +46,14 @@ function NovelItem(props) {
             method: 'POST'
         }
         fetch(window.serverURL + "delete/" + novel.id, options).then(response => response.json()).then(data => {
-            props.update()
+            props.deleteItem(novel.id)
             alert(data.message)
         })
     }
-    let redirectPath = "/novel/" + novel.md5;
+    let redirectPath = "/chapters/" + novel.md5;
     const src = "data:image/png;base64," + novel.cover;
     const redirect = (
-        <Redirect to={{pathname: redirectPath, state: {novel: novel}}}/>
+        <Redirect to={{pathname: redirectPath, state: {novel: novel, updateInformation: props.updateInformation}}}/>
     )
     const element = (
         <Box className="NovelItem">
@@ -68,6 +68,7 @@ function NovelItem(props) {
                     <MenuList>
                         <MenuItem onClick={uploadCover}>上傳圖片</MenuItem>
                         <MenuItem onClick={deleteItem}>Delete</MenuItem>
+                        <MenuItem onClick={props.coverSelect}>搜尋圖片</MenuItem>
                     </MenuList>
                 </Menu>
             </Box>

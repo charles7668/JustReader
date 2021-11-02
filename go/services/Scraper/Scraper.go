@@ -1,6 +1,7 @@
 package Scraper
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
@@ -108,6 +109,8 @@ func SearchCover(searchTitle string) []string {
 
 //parseByRule using rule to parse html
 func parseByRule(rule *Rule, searchTitle string) []Novel {
+	logger.Println("func enter : Scraper/parseByRule")
+	defer logger.Println("func exit : Scraper/parseByRule")
 	var novelResults []Novel
 	keyword := map[string]*string{"{page}": nil, "{searchKey}": nil}
 	keyword["{searchKey}"] = &searchTitle
@@ -131,9 +134,20 @@ func parseByRule(rule *Rule, searchTitle string) []Novel {
 			}
 			requestBody.Add(key, converted)
 		}
-		req, err := http.NewRequest(rule.Request.Method, rule.Request.URL, strings.NewReader(requestBody.Encode()))
-		if checkError(err) {
-			continue
+		var req *http.Request
+		if rule.Request.Method == "GET" {
+			var err error
+			req, err = http.NewRequest(rule.Request.Method, rule.Request.URL, nil)
+			if checkError(err) {
+				continue
+			}
+			req.URL.RawQuery = requestBody.Encode()
+		} else {
+			var err error
+			req, err = http.NewRequest(rule.Request.Method, rule.Request.URL, strings.NewReader(requestBody.Encode()))
+			if checkError(err) {
+				continue
+			}
 		}
 		for key, value := range rule.Request.Header {
 			req.Header.Add(key, value)
@@ -170,9 +184,7 @@ func parseByRule(rule *Rule, searchTitle string) []Novel {
 				if converted == "" {
 					converted = informationUrl
 				}
-				if strings.HasPrefix(converted, "/") {
-					converted = strings.TrimSuffix(rule.SourceURL, "/") + converted
-				}
+				converted = urlComplete(rule.SourceURL, converted)
 				list = append(list, converted)
 			} else {
 				list = append(list, informationUrl)
@@ -224,15 +236,40 @@ func parseByRule(rule *Rule, searchTitle string) []Novel {
 			} else {
 				cover = element.First().Text()
 			}
-			if strings.HasPrefix(cover, "/") {
-				cover = strings.TrimSuffix(rule.SourceURL, "/") + cover
-			}
+			cover = urlComplete(rule.SourceURL, cover)
 			result.Cover = cover
 		}
 		novelResults = append(novelResults, result)
 		responseBodyClose(res.Body)
 	}
 	return novelResults
+}
+
+//GetImageFromURLToBase64 get image form url convert to base64 string
+func GetImageFromURLToBase64(url string) string {
+	logger.Println("func enter : Scraper/GetImageFromURLToBase64")
+	defer logger.Println("func exit : Scraper/GetImageFromURLToBase64")
+	res, err := http.Get(url)
+	if checkError(err) {
+		return ""
+	}
+	s, _ := ioutil.ReadAll(res.Body)
+	encodingToString := base64.StdEncoding.EncodeToString(s)
+	return encodingToString
+}
+
+//urlComplete complete url
+func urlComplete(source string, destination string) string {
+	var result string
+	if strings.HasPrefix(destination, "//") {
+		result = strings.Split(source, "//")[0] + destination
+	} else if strings.HasPrefix(destination, "/") {
+		result = strings.TrimSuffix(source, "/") + destination
+	}
+	result = strings.ReplaceAll(result, "\n", "")
+	result = strings.ReplaceAll(result, " ", "")
+	result = strings.ReplaceAll(result, "\t", "")
+	return result
 }
 
 //checkError handle error and return true if error exist
