@@ -1,0 +1,33 @@
+{
+  "source_url": "https://www.ptwxz.com",
+  "source_name": "飄天文學",
+  "request": {
+    "url": "https://www.ptwxz.com/modules/article/search.php",
+    "method": "POST",
+    "header": {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    "body": {
+      "searchkey": "{searchKey}",
+      "page": "{page}"
+    },
+    "charset": "GBK"
+  },
+  "search_rule": [
+    {
+      "search_list": "h1 , #content > .grid > tbody > tr:not(:first-child) ",
+      "novel_information_url": {
+        "selector": ".odd > a",
+        "attribute": "href"
+      },
+      "novel_name": {
+        "selector": "h1",
+        "attribute": ""
+      },
+      "cover": {
+        "selector": "#centerm > #content tbody td:nth-child(2) a > img",
+        "attribute": "src"
+      }
+    }
+  ]
+}

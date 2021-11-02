@@ -1,0 +1,31 @@
+{
+  "source_url": "https://www.qidian.com",
+  "source_name": "起點中文",
+  "request": {
+    "url": "https://www.qidian.com/search",
+    "method": "GET",
+    "header": {
+    },
+    "body": {
+      "kw": "{searchKey}"
+    },
+    "charset": "UTF-8"
+  },
+  "search_rule": [
+    {
+      "search_list": "#result-list",
+      "novel_information_url": {
+        "selector": ".book-mid-info > h4 > a",
+        "attribute": "href"
+      },
+      "novel_name": {
+        "selector": ".book-info > h1 > em",
+        "attribute": ""
+      },
+      "cover": {
+        "selector": "#bookImg > img",
+        "attribute": "src"
+      }
+    }
+  ]
+}
