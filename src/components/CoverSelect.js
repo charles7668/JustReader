@@ -1,6 +1,5 @@
 import {
     Button, Image,
-    MenuItem,
     Modal,
     ModalBody, ModalContent,
     ModalFooter,
@@ -8,14 +7,35 @@ import {
     ModalOverlay, Radio, RadioGroup, Stack,
     useDisclosure
 } from "@chakra-ui/react";
-import {useEffect, useMemo, useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import LoadingPage from "./LoadingPage";
 
 function CoverSelect(props) {
     let {isOpen} = useDisclosure()
     const [isLoading, setIsLoading] = useState(true)
-    // const [fetchComplete, setFetchComplete] = useState(false)
+    const [submitLoading, setSubmitLoading] = useState(false)
+    const selectedRef = useRef(0)
     const radioListRef = useRef([])
+    const onSubmitRef = useRef((rowID) => {
+            setSubmitLoading(true)
+            const option = {
+                method: "POST",
+                body: JSON.stringify({url: selectedRef.current})
+            }
+            fetch(window.serverURL + "use_net_image/" + rowID, option).then((res) => res.json()).then((data) => {
+                alert(data.message)
+                setTimeout(() => {
+                    props.updateCover(rowID)
+                    setSubmitLoading(false)
+                    props.onClose()
+                }, 100)
+            }).catch((err) => {
+                alert(err)
+                setSubmitLoading(false)
+                props.onClose()
+            })
+        }
+    )
     isOpen = props.isOpen
     useEffect(() => {
         if (isOpen === true) {
@@ -37,13 +57,22 @@ function CoverSelect(props) {
                 } else {
                     radioListRef.current = list.map((url, index) => {
                         return (
-                            <Radio value={index}> <Image width={"150px"} height={"300px"} src={url} alt={"404"}/>
+                            <Radio value={index} onChange={() => selectedRef.current = url}>
+                                <Image
+                                    width={"250px"}
+                                    height={"300px"}
+                                    src={url}
+                                    alt={"404"}/>
                             </Radio>
                         )
                     })
                 }
                 setIsLoading(false)
-            })
+            }).catch(() => {
+                    radioListRef.current = undefined
+                    setIsLoading(false)
+                }
+            )
             return () => {
             }
         } else {
@@ -59,7 +88,7 @@ function CoverSelect(props) {
                 <ModalBody>
                     {isLoading && <LoadingPage height={"100px"} backgroundColor={"transparent"} text="loading"/>}
                     {!isLoading &&
-                    <RadioGroup defaultValue="1">
+                    <RadioGroup defaultValue="1" defaultChecked={"true"}>
                         <Stack>
                             {radioListRef.current}
                         </Stack>
@@ -67,6 +96,9 @@ function CoverSelect(props) {
                     }
                 </ModalBody>
                 <ModalFooter>
+                    <Button isLoading={submitLoading} colorScheme="blue"
+                            onClick={() => onSubmitRef.current(props.rowID)}
+                            marginRight={"5px"}>確定</Button>
                     <Button colorScheme="blue" mr={3} onClick={props.onClose}>
                         Close
                     </Button>

@@ -36,17 +36,15 @@ function SettingMenu() {
         }
         fetch(window.serverURL + "novels", options).then(response => ({
             status: response.status,
-            data: response
-        })).then(data => {
-            if (data.status === 208) {
-                alert('file exist')
-            } else if (data.status !== 200) {
-                alert('error')
-            } else {
-                data.data.json().then(() => {
-                    window.updateNovelList()
+            data: response.json()
+        })).then(obj => {
+            if (obj.status === 200) {
+                obj.data.then((data) => {
+                    window.updateNovelList(data)
                     alert('success')
                 })
+            } else {
+                obj.data.then((message) => alert(message.message))
             }
             setLoading(false)
         }).catch((err) => {

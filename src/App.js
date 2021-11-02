@@ -25,7 +25,7 @@ function App() {
                         exact
                         component={MainPage}
                     />
-                    <Route path="/novel" component={NovelReadPage}/>
+                    <Route path="/chapters" component={NovelReadPage}/>
                 </HashRouter>
             </SettingContext.Provider>
         </div>

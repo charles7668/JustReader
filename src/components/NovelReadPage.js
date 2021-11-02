@@ -93,7 +93,7 @@ function NovelReadPage(props) {
         }
         if (props.location.state === undefined) return
         const tempNovel = props.location.state.novel
-        const getChapter = async () => await fetch(window.serverURL + "novels/" + tempNovel.md5).then(response => response.json()).then(data => {
+        const getChapter = async () => await fetch(window.serverURL + "chapters/" + tempNovel.md5).then(response => response.json()).then(data => {
             if (!Array.isArray(data)) {
                 alert("response type error")
                 setIsGoBack(true)
@@ -302,7 +302,7 @@ function IndexMenu(props) {
                                             backgroundColor: `${bgColor}`,
                                             color: `${fontColor}`,
                                             border: '1px solid',
-                                            opacity:'0'
+                                            opacity: '0'
                                         }}
                                         itemCount={memos.chapters.length}>{row.current}</FixedSizeList>}
         </Box>
