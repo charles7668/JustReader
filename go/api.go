@@ -35,6 +35,7 @@ const (
 	Success = 0
 	ParamError
 	DatabaseOperationError
+	Other
 )
 
 type ServerSetting struct {
@@ -83,36 +84,36 @@ func getNovelByID(c *gin.Context) {
 //addNovels url : /novels/ , Method : POST
 //add novel file to database
 func addNovels(c *gin.Context) {
-	logger.Println("POST : add novels")
+	logger.Println("func enter : main/addNovels")
+	defer logger.Println("func exit : main/addNovels")
 	file, err := c.FormFile("file")
-	if err != nil {
-		logger.Fatalln(err)
-		c.IndentedJSON(http.StatusBadRequest, novel.Information{})
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "param error"})
 		return
 	}
 	fileName := file.Filename
 	exist := novel.CheckNovelExist(fileName)
 	if exist {
 		logger.Println(fileName + " is exist")
-		c.IndentedJSON(http.StatusAlreadyReported, novel.Information{})
+		c.IndentedJSON(http.StatusAlreadyReported, Message{Status: DatabaseOperationError, Message: "file already exist"})
 		return
 	}
 	logger.Println(fileName)
 	err = c.SaveUploadedFile(file, fileName)
-	if err != nil {
-		logger.Fatalln(err)
-		c.IndentedJSON(http.StatusBadRequest, novel.Information{})
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "can't save image"})
 		return
 	}
 	information, err := novel.AddNovel(fileName)
-	fileErr := file_operation.DeleteFile(fileName)
-	logger.Print("delete file err : ")
-	logger.Println(fileErr)
-	if err != nil {
-		c.IndentedJSON(http.StatusMethodNotAllowed, novel.Information{})
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: DatabaseOperationError, Message: "database error"})
 		return
 	}
-	logger.Println("POST novels success")
+	err = file_operation.DeleteFile(fileName)
+	if checkError(err) {
+		c.IndentedJSON(http.StatusMethodNotAllowed, Message{Status: Other, Message: "file operation error"})
+		return
+	}
 	c.IndentedJSON(http.StatusOK, information)
 }
 
