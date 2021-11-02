@@ -223,3 +223,27 @@ func addImage(rowID int, image string) error {
 	logger.Println("func exit : novel/db addImage")
 	return nil
 }
+
+//getNovel get novel by md5
+func getNovel(rowID int) (Information, error) {
+	logger.Println("func enter : novel/db/getNovel")
+	defer logger.Println("func exit : novel/db/getNovel")
+	queryString := fmt.Sprintf("SELECT ROWID, * from NovelInformation WHERE ROWID=%d", rowID)
+	var information Information
+	row := db.QueryRow(queryString)
+	err := row.Scan(&information.ID,
+		&information.Author,
+		&information.Brief,
+		&information.Name,
+		&information.CurrentChapter,
+		&information.LastChapter,
+		&information.FileName,
+		&information.LastAccess,
+		&information.CreateTime,
+		&information.MD5,
+		&information.Cover)
+	if checkError(err) {
+		return Information{}, err
+	}
+	return information, err
+}

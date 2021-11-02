@@ -1,6 +1,7 @@
 package Scraper
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
@@ -108,6 +109,8 @@ func SearchCover(searchTitle string) []string {
 
 //parseByRule using rule to parse html
 func parseByRule(rule *Rule, searchTitle string) []Novel {
+	logger.Println("func enter : Scraper/parseByRule")
+	defer logger.Println("func exit : Scraper/parseByRule")
 	var novelResults []Novel
 	keyword := map[string]*string{"{page}": nil, "{searchKey}": nil}
 	keyword["{searchKey}"] = &searchTitle
@@ -240,6 +243,19 @@ func parseByRule(rule *Rule, searchTitle string) []Novel {
 		responseBodyClose(res.Body)
 	}
 	return novelResults
+}
+
+//GetImageFromURLToBase64 get image form url convert to base64 string
+func GetImageFromURLToBase64(url string) string {
+	logger.Println("func enter : Scraper/GetImageFromURLToBase64")
+	defer logger.Println("func exit : Scraper/GetImageFromURLToBase64")
+	res, err := http.Get(url)
+	if checkError(err) {
+		return ""
+	}
+	s, _ := ioutil.ReadAll(res.Body)
+	encodingToString := base64.StdEncoding.EncodeToString(s)
+	return encodingToString
 }
 
 //urlComplete complete url

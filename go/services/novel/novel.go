@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"github.com/charles7668/novel-reader/services/encoding"
 	_ "github.com/mattn/go-sqlite3"
 	"golang.org/x/text/transform"
@@ -58,7 +59,7 @@ func readSomeText(path string, lineCount int32) ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
 	}
-	defer file.Close()
+	defer closeFile(file)
 	scanner := bufio.NewScanner(file)
 	var counter int32 = 0
 	var result []byte
@@ -92,7 +93,7 @@ func getNovelInformation(path string) (Novel, error) {
 	if err != nil {
 		return Novel{Information: novelInformation, Chapters: []Chapter{}}, err
 	}
-	defer file.Close()
+	defer closeFile(file)
 	novelInformation.FileName = path
 	reader := transform.NewReader(file, encoding.GetDecoder(charSet))
 	scanner := bufio.NewScanner(reader)
@@ -191,6 +192,11 @@ func GetChapters(md5 string) []Chapter {
 	return getChapters(md5)
 }
 
+//GetNovel get novel by row id
+func GetNovel(rowID int) (Information, error) {
+	return getNovel(rowID)
+}
+
 //UpdateAccessTime time string
 func UpdateAccessTime(rowID int) (string, error) {
 	result := updateAccessTime(rowID)
@@ -217,4 +223,19 @@ func DeleteNovel(rowID int) error {
 //AddImage add image by row id , image must convert to base64 encoding
 func AddImage(rowID int, image string) error {
 	return addImage(rowID, image)
+}
+
+//checkError handle error
+func checkError(err error) bool {
+	if err != nil {
+		fmt.Println(err)
+		return true
+	}
+	return false
+}
+
+//closeFile close file with error handle
+func closeFile(file *os.File) {
+	err := file.Close()
+	checkError(err)
 }
