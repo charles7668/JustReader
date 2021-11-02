@@ -333,14 +333,22 @@ func main() {
 	date := time.Now().Format("060102")
 	logWriter, err := os.OpenFile("./log"+date+".log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	logger = log.New(logWriter, "", log.Ldate|log.Ltime)
-	defer logWriter.Close()
+	defer func(logWriter *os.File) {
+		err = logWriter.Close()
+		if err != nil {
+			return
+		}
+	}(logWriter)
 	_, _ = file_operation.CreateFileIfNotExist("novel-reader.db")
 	logger.Println("open novel-reader.db")
 	db, err := sql.Open("sqlite3", "novel-reader.db")
 	if err != nil {
 		logger.Fatalln(err)
 	} else {
-		defer db.Close()
+		defer func(db *sql.DB) {
+			err = db.Close()
+			checkError(err)
+		}(db)
 		logger.Println("create NovelInformation table if not exist")
 		queryString := `CREATE TABLE IF NOT EXISTS NovelInformation
 							(
