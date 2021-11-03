@@ -13,8 +13,8 @@
   },
   "search_rule": [
     {
-      "search_list": "#result-list",
-      "novel_information_url": {
+      "search_list": "#result-list ul > li",
+      "search_list_information_url": {
         "selector": ".book-mid-info > h4 > a",
         "attribute": "href"
       },

@@ -16,7 +16,15 @@
   "search_rule": [
     {
       "search_list": "h1 , #content > .grid > tbody > tr:not(:first-child) ",
-      "novel_information_url": {
+      "search_list_title": {
+        "selector": "h1 , .odd > a",
+        "attribute": ""
+      },
+      "search_list_author": {
+        "selector": "#content table > tbody > tr:nth-child(1) > td > table > tbody > tr:nth-child(2) > td:nth-child(2),:nth-child(3)",
+        "attribute": ""
+      },
+      "search_list_information_url": {
         "selector": ".odd > a",
         "attribute": "href"
       },
@@ -27,6 +35,11 @@
       "cover": {
         "selector": "#centerm > #content tbody td:nth-child(2) a > img",
         "attribute": "src"
+      },
+      "novel_author": {
+        "selector": "#content table > tbody > tr:nth-child(1) > td > table > tbody > tr:nth-child(2) > td:nth-child(2)",
+        "attribute": "",
+        "regex": "作.*?者：(.+)"
       }
     }
   ]

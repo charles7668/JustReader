@@ -32,9 +32,11 @@ type Message struct {
 type ErrorCode int
 
 const (
-	Success = 0
+	Success = iota
 	ParamError
 	DatabaseOperationError
+	SearchCoverProcessing
+	SearchCoverReadyToGet
 	Other
 )
 
@@ -266,6 +268,17 @@ func getSetting(c *gin.Context) {
 
 //searchCover search cover
 func searchCover(c *gin.Context) {
+	logger.Println("func enter : main/searchCover")
+	defer logger.Println("func exit : main/searchCover")
+	runningState := Scraper.GetStatus()
+	if runningState != Scraper.Ready {
+		if runningState == Scraper.ReadyToGet {
+			c.IndentedJSON(http.StatusOK, Message{Status: SearchCoverReadyToGet, Message: "search finished , data is wait for reading"})
+		} else if runningState == Scraper.Processing {
+			c.IndentedJSON(http.StatusOK, Message{Status: SearchCoverProcessing, Message: "processing , can get current data"})
+		}
+		return
+	}
 	var body map[string]string
 	bodyData, err := ioutil.ReadAll(c.Request.Body)
 	if checkError(err) {
@@ -279,13 +292,38 @@ func searchCover(c *gin.Context) {
 	}
 	searchKey, exist := body["search_key"]
 	if exist {
-		//var searchKey string
-		//err = json.Unmarshal(body["search_key"], &searchKey)
-		results := Scraper.SearchCover(string(searchKey))
-		c.IndentedJSON(http.StatusOK, results)
+		go Scraper.SearchCover(string(searchKey))
+		c.IndentedJSON(http.StatusOK, Message{Status: SearchCoverProcessing, Message: "search start"})
 	} else {
 		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "search key is empty"})
 	}
+}
+
+//getSearchCover get current search cover
+func getSearchCover(c *gin.Context) {
+	logger.Println("func enter : main/getSearchCover")
+	defer logger.Println("func exit : main/getSearchCover")
+	result := Scraper.GetCoverList()
+	c.IndentedJSON(http.StatusOK, result)
+}
+
+//stopSearchCover stop search cover and return current list
+func stopSearchCover(c *gin.Context) {
+	logger.Println("func enter : main/stopSearchCover")
+	defer logger.Println("func exit : main/stopSearchCover")
+	var result []string
+	if Scraper.GetStatus() == Scraper.Processing {
+		Scraper.StopProcessing()
+		for {
+			if Scraper.GetStatus() == Scraper.ReadyToGet {
+				result = Scraper.GetCoverList()
+				break
+			}
+		}
+	} else if Scraper.GetStatus() == Scraper.ReadyToGet {
+		result = Scraper.GetCoverList()
+	}
+	c.IndentedJSON(http.StatusOK, result)
 }
 
 //useNetImageByID use net image
@@ -381,6 +419,8 @@ func main() {
 	router.GET("/novels/:id", getNovelByID)
 	router.GET("/setting", getSetting)
 	router.POST("/search_cover", searchCover)
+	router.POST("/search_cover/get", getSearchCover)
+	router.POST("/search_cover/stop", stopSearchCover)
 	router.POST("/update_time/:rowID", updateAccessTimeByID)
 	router.POST("/update_reading/:rowID", updateReadingByID)
 	router.POST("/delete/:rowID", deleteNovelByID)
