@@ -6,7 +6,7 @@ import "./css/NovelReadPage.css";
 import {Box, Center, IconButton, Menu, MenuButton, MenuItem, MenuList} from "@chakra-ui/react";
 import {AiOutlineArrowLeft, BsFillFileTextFill, DiAptana} from "react-icons/all";
 import {SketchPicker} from "react-color";
-import {SettingContext} from "../App";
+import {AlertContext, SettingContext} from "../App";
 import {ArrowLeftIcon, ArrowRightIcon} from '@chakra-ui/icons'
 import {FixedSizeList} from 'react-window';
 
@@ -27,8 +27,8 @@ function NovelReadPage(props) {
     const updateColor = useRef()
     const contentRef = useRef(undefined)
     const completeRef = useRef(false)
-
-    async function updateReading() {
+    const alert = useContext(AlertContext)
+    const updateReadingRef = useRef(async () => {
         const options = {
             method: 'POST',
             body: JSON.stringify(novel.current.information),
@@ -37,15 +37,16 @@ function NovelReadPage(props) {
             }
         }
         await fetch(window.serverURL + "update_reading/" + novel.current.information.id, options).then(response => response.text()).then(data => {
-            if (data === "fail")
+            if (data === "fail") {
                 alert("fail")
+            }
         }).catch(err => {
             alert(err)
         })
-    }
+    })
 
     function goBack() {
-        updateReading().then(() => {
+        updateReadingRef.current().then(() => {
             settingContext.reading_background_color = backgroundColor
             settingContext.reading_font_color = fontColor
             const options = {
@@ -77,7 +78,7 @@ function NovelReadPage(props) {
         if (completeRef.current) {
             novel.current.information.current_chapter = viewChapter.title
             // noinspection JSIgnoredPromiseFromCall
-            updateReading()
+            updateReadingRef.current()
             if (contentRef.current !== undefined) {
                 contentRef.current.scrollTop = 0
             }
@@ -118,7 +119,7 @@ function NovelReadPage(props) {
         fetch(window.serverURL + "update_time/" + tempNovel.id, options).then(res => res.text()).then(() => {
             getChapter().then(r => r)
         })
-    }, [props.location.state])
+    }, [alert, props.location.state])
 
 
     const goBackRedirect = <Redirect to="/"/>;

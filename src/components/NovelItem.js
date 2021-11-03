@@ -1,17 +1,20 @@
 // noinspection JSUnresolvedVariable
 
-import React, {useEffect, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 import "./css/NovelItem.css";
 import {Redirect} from "react-router-dom";
 import LoadingPage from "./LoadingPage";
 import {Box, Menu, MenuButton, IconButton, MenuItem, MenuList} from "@chakra-ui/react";
 import {SettingsIcon} from "@chakra-ui/icons";
+import {AlertContext} from "../App";
+import {AlertDialog, useAlertDialog} from "./Alert"
 
 function NovelItem(props) {
     const [novelView, setNovelView] = useState(false)
     const [loading, setLoading] = useState(false)
     const [novel, setNovel] = useState({})
-
+    const alert = useContext(AlertContext)
+    const [isAlert, alertMessage, alertTitle, okAction, cancelAction, alertDialog, closeAlertDialog] = useAlertDialog()
     useEffect(() => {
         setNovel(props.novelInformation)
     }, [props.novelInformation])
@@ -40,14 +43,17 @@ function NovelItem(props) {
     }
 
     const deleteItem = () => {
-        let dialog = window.confirm('確定刪除?');
-        if (!dialog) return;
-        const options = {
-            method: 'POST'
-        }
-        fetch(window.serverURL + "delete/" + novel.id, options).then(response => response.json()).then(data => {
-            props.deleteItem(novel.id)
-            alert(data.message)
+        // let dialog = window.confirm('確定刪除?');
+        // if (!dialog) return;
+        alertDialog("確定删除?", "delete", () => {
+            const options = {
+                method: 'POST'
+            }
+            fetch(window.serverURL + "delete/" + novel.id, options).then(response => response.json()).then(data => {
+                props.deleteItem(novel.id)
+                alert(data.message)
+            })
+        }, () => {
         })
     }
     let redirectPath = "/chapters/" + novel.md5;
@@ -83,6 +89,8 @@ function NovelItem(props) {
                    dangerouslySetInnerHTML={{__html: novel.brief?.replaceAll('\n', '<br/>')}}/>
             </div>
             {loading === true && <LoadingPage text={"uploading"}/>}
+            <AlertDialog isOpen={isAlert} alertMessage={alertMessage} alertTitle={alertTitle} okAction={okAction}
+                         cancelAction={cancelAction} closeAlert={closeAlertDialog}/>
         </Box>
     );
     return novelView ? redirect : element;

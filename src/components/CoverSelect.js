@@ -7,13 +7,15 @@ import {
     ModalOverlay, Radio, RadioGroup, Stack,
     useDisclosure
 } from "@chakra-ui/react";
-import {useEffect, useRef, useState} from "react";
+import {useContext, useEffect, useRef, useState} from "react";
 import LoadingPage from "./LoadingPage";
+import {AlertContext} from "../App";
 
 function CoverSelect(props) {
     let {isOpen} = useDisclosure()
     const [isLoading, setIsLoading] = useState(true)
     const [submitLoading, setSubmitLoading] = useState(false)
+    const alert = useContext(AlertContext)
     const selectedRef = useRef(0)
     const radioListRef = useRef([])
     const onSubmitRef = useRef((rowID) => {
@@ -78,7 +80,7 @@ function CoverSelect(props) {
         } else {
             setIsLoading(true)
         }
-    }, [isOpen, props.name])
+    }, [alert, isOpen, props.name])
 
     return (
         <Modal isOpen={isOpen} onClose={props.onClose} closeOnOverlayClick={false} scrollBehavior={"inside"}>

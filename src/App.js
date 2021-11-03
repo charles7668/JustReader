@@ -1,33 +1,42 @@
 import "./App.css";
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {HashRouter, Route} from "react-router-dom";
 import MainPage from "./components/MainPage";
 import NovelReadPage from "./components/NovelReadPage";
 import "bootstrap/dist/css/bootstrap.min.css";
+import Alert, {useAlert} from "./components/Alert"
 
 export const SettingContext = React.createContext({})
+export const AlertContext = React.createContext(function (message, title = "unset") {
+
+})
 
 function App() {
     const [setting, setSetting] = useState({})
+    const [isAlert, alertTitle, alertMessage, showAlert, closeAlert] = useAlert()
+    const showAlertRef = useRef(showAlert)
     useEffect(() => {
         fetch(window.serverURL + "setting").then(res => res.json()).then(data => {
             setSetting(data)
         }).catch(err => {
-            alert(err)
+            showAlertRef.current(err, "error")
         })
     }, [])
     return (
         <div className="App">
-            <SettingContext.Provider value={setting}>
-                <HashRouter>
-                    <Route
-                        path="/"
-                        exact
-                        component={MainPage}
-                    />
-                    <Route path="/chapters" component={NovelReadPage}/>
-                </HashRouter>
-            </SettingContext.Provider>
+            <AlertContext.Provider value={showAlertRef.current}>
+                <SettingContext.Provider value={setting}>
+                    <HashRouter>
+                        <Route
+                            path="/"
+                            exact
+                            component={MainPage}
+                        />
+                        <Route path="/chapters" component={NovelReadPage}/>
+                    </HashRouter>
+                </SettingContext.Provider>
+                <Alert isOpen={isAlert} alertTitle={alertTitle} alertMessage={alertMessage} closeAlert={closeAlert}/>
+            </AlertContext.Provider>
         </div>
     );
 }

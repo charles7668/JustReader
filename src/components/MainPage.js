@@ -7,14 +7,13 @@ function MainPage() {
     return (
         <div className="MainPage">
             <NavigationBar
-                className="c"
                 location="/novel"
             />
             <div className="MainPanel">
                 <NovelList/>
             </div>
         </div>
-    );
+    )
 }
 
 export default MainPage;

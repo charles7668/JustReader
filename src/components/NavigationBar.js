@@ -1,10 +1,11 @@
 // import { button } from "react-bootstrap";
-import React, {useRef, useState} from "react";
+import React, {useContext, useRef, useState} from "react";
 import "./css/NavigationBar.css";
 import {Button} from "react-bootstrap";
 import {Box, IconButton, Input, Menu, MenuButton, MenuItem, MenuList} from "@chakra-ui/react";
 import {HamburgerIcon} from "@chakra-ui/icons";
 import LoadingPage from "./LoadingPage";
+import {AlertContext} from "../App";
 
 function NavigationBar() {
     const inputRef = useRef()
@@ -24,6 +25,7 @@ function NavigationBar() {
 
 function SettingMenu() {
     const [loading, setLoading] = useState(false)
+    const alert = useContext(AlertContext)
     const uploadRef = useRef()
     const startUpload = (event) => {
         setLoading(true)
