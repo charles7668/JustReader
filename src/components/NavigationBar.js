@@ -36,7 +36,7 @@ function SettingMenu() {
             method: 'POST',
             body: formData,
         }
-        fetch(window.serverURL + "novels", options).then(response => ({
+        fetch(window.serverURL + "file/novel", options).then(response => ({
             status: response.status,
             data: response.json()
         })).then(obj => {

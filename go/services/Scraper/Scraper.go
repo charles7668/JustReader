@@ -20,6 +20,7 @@ import (
 )
 
 type Novel struct {
+	RuleName       string `json:"rule_name"`
 	Title          string `json:"title"`
 	Author         string `json:"author"`
 	Brief          string `json:"brief"`
@@ -45,6 +46,7 @@ type SearchSelector struct {
 	Selector  string `json:"selector"`
 	Attribute string `json:"attribute"`
 	Regex     string `json:"regex"`
+	UrlParam  string `json:"url_param"`
 }
 
 type SearchRule struct {
@@ -55,13 +57,22 @@ type SearchRule struct {
 	SearchListInformationUrl SearchSelector `json:"search_list_information_url"`
 	NovelName                SearchSelector `json:"novel_name"`
 	NovelAuthor              SearchSelector `json:"novel_author"`
+	NovelIndex               SearchSelector `json:"novel_index"`
+	NovelIndexChapterName    SearchSelector `json:"novel_index_chapter_name"`
+	NovelIndexChapterUrl     SearchSelector `json:"novel_index_chapter_url"`
 }
 
 type Rule struct {
+	RuleName   string       `json:"rule_name"`
 	SourceURL  string       `json:"source_url"`
 	SourceName string       `json:"source_name"`
 	Request    Request      `json:"request"`
 	SearchRule []SearchRule `json:"search_rule"`
+}
+
+type Chapter struct {
+	ChapterName string `json:"chapter_name"`
+	ChapterUrl  string `json:"chapter_url"`
 }
 
 type SafeNovels struct {
@@ -129,6 +140,7 @@ func getRules() []Rule {
 					if checkError(err) {
 						continue
 					}
+					rule.RuleName = strings.TrimSuffix(trim, ".rule")
 					rules = append(rules, rule)
 				}
 			}
@@ -139,6 +151,9 @@ func getRules() []Rule {
 
 //SearchCover search cover from site
 func SearchCover(searchTitle string) {
+	if status.runningState != Ready {
+		return
+	}
 	status.mutex.Lock()
 	status.runningState = Processing
 	status.mutex.Unlock()
@@ -151,7 +166,7 @@ func SearchCover(searchTitle string) {
 			break
 		}
 		novels := getNovelListByRule(&rule, searchTitle)
-		novels = getNovelInformation(novels, rule)
+		novels = getNovelsInformation(novels, rule)
 		novelResults.Mutex.Lock()
 		novelResults.Novels = append(novelResults.Novels, novels...)
 		novelResults.Mutex.Unlock()
@@ -159,16 +174,39 @@ func SearchCover(searchTitle string) {
 	status.mutex.Lock()
 	status.runningState = ReadyToGet
 	status.mutex.Unlock()
-	fmt.Println("test")
-	//jsonString, err := json.MarshalIndent(novelResults.Novels, "", "  ")
-	//if !checkError(err) {
-	//	ioutil.WriteFile("test.json", []byte(jsonString), 0666)
-	//}
-	//var returnValue []string
-	//for _, novel := range novelResults.Novels {
-	//	returnValue = append(returnValue, novel.Cover)
-	//}
-	//return returnValue
+}
+
+func SearchNovel(searchKey string) {
+	if status.runningState != Ready {
+		return
+	}
+	status.mutex.Lock()
+	status.runningState = Processing
+	status.mutex.Unlock()
+	novelResults.Mutex.Lock()
+	novelResults.Novels = nil
+	novelResults.Mutex.Unlock()
+	rules := getRules()
+	for _, rule := range rules {
+		if status.runningState == Stopping {
+			break
+		}
+		novels := getNovelListByRule(&rule, searchKey)
+		novelResults.Mutex.Lock()
+		novelResults.Novels = append(novelResults.Novels, novels...)
+		novelResults.Mutex.Unlock()
+	}
+	status.mutex.Lock()
+	status.runningState = ReadyToGet
+	status.mutex.Unlock()
+}
+
+func GetSearchList() []Novel {
+	novelResults.Mutex.Lock()
+	result := novelResults.Novels
+	novelResults.Novels = nil
+	novelResults.Mutex.Unlock()
+	return result
 }
 
 func GetCoverList() []string {
@@ -269,6 +307,10 @@ func getNovelListByRule(rule *Rule, searchTitle string) []Novel {
 			result, exist = getTextBySelector(s, searchRule)
 			converted = string(encoding.ConvertBytesToEncoding([]byte(result), rule.Request.CharSet))
 			novel.Author = converted
+			//source name
+			novel.SourceName = rule.SourceName
+			//rule name
+			novel.RuleName = rule.RuleName
 			list = append(list, novel)
 		})
 		if len(list) >= 1 {
@@ -286,7 +328,7 @@ func getNovelListByRule(rule *Rule, searchTitle string) []Novel {
 	return list
 }
 
-func getNovelInformation(novelList []Novel, rule Rule) []Novel {
+func getNovelsInformation(novelList []Novel, rule Rule) []Novel {
 	for index, novel := range novelList {
 		res, err := http.Get(novel.InformationUrl)
 		if checkError(err) {
@@ -314,14 +356,106 @@ func getNovelInformation(novelList []Novel, rule Rule) []Novel {
 			converted = urlComplete(rule.SourceURL, result)
 		}
 		novelList[index].Cover = converted
-		//source name
-		novelList[index].SourceName = rule.SourceName
+		//index url
+		converted = ""
+		parseRule = rule.SearchRule[0].NovelIndex
+		result, exist = getTextBySelector(element, parseRule)
+		if exist {
+			converted = urlComplete(rule.SourceURL, result)
+		}
+		novelList[index].IndexUrl = converted
 		responseBodyClose(res.Body)
 	}
 	return novelList
 }
 
+//GetNovelInformation get novel information
+func GetNovelInformation(novel Novel) Novel {
+	logger.Println("func enter : Scraper/GetNovelInformation")
+	defer logger.Println("func exit : Scraper/GetNovelInformation")
+	rules := getRules()
+	result := novel
+	for _, rule := range rules {
+		if rule.RuleName == novel.RuleName {
+			novels := getNovelsInformation([]Novel{novel}, rule)
+			result = novels[0]
+			break
+		}
+	}
+	return result
+}
+
+func GetNovelChapters(novel Novel) []Chapter {
+	logger.Println("func enter : Scraper/GetNovelChapters")
+	defer logger.Println("func exit : Scraper/GetNovelChapters")
+	if novel.IndexUrl == "" {
+		novel = GetNovelInformation(novel)
+	}
+	rules := getRules()
+	var result []Chapter
+	for _, rule := range rules {
+		if rule.RuleName == novel.RuleName {
+			result = getNovelChapters(novel, rule)
+		}
+	}
+	return result
+}
+
+func getNovelChapters(novel Novel, rule Rule) []Chapter {
+	logger.Println("func enter : Scraper/getNovelChapters")
+	defer logger.Println("func exit : Scraper/getNovelChapters")
+	var result []Chapter
+	res, err := http.Get(novel.IndexUrl)
+	if checkError(err) {
+		return result
+	}
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+	defer responseBodyClose(res.Body)
+	if checkError(err) {
+		return result
+	}
+	parseRule := rule.SearchRule[0].NovelIndexChapterName
+	element := doc.Find(parseRule.Selector)
+	element.Each(func(i int, s *goquery.Selection) {
+		var chapter Chapter
+		text, exist := getTextBySelector(s, parseRule)
+		var converted string
+		if exist {
+			converted = string(encoding.ConvertBytesToEncoding([]byte(text), rule.Request.CharSet))
+			converted = matchString(converted, parseRule.Regex)
+		}
+		chapter.ChapterName = converted
+		result = append(result, chapter)
+	})
+	parseRule = rule.SearchRule[0].NovelIndexChapterUrl
+	element = doc.Find(parseRule.Selector)
+	element.Each(func(i int, s *goquery.Selection) {
+		if i < len(result) {
+			var converted string
+			text, exist := getTextBySelector(s, parseRule)
+			if exist {
+				converted = urlComplete(novel.IndexUrl, text)
+			}
+			result[i].ChapterUrl = converted
+		}
+	})
+	return result
+}
+
 func getTextBySelector(selection *goquery.Selection, searchSelector SearchSelector) (string, bool) {
+	if len(selection.Nodes) == 1 {
+		if searchSelector.Attribute != "" {
+			var exist bool
+			result, exist := selection.Attr(searchSelector.Attribute)
+			if !exist {
+				result = ""
+				return result, false
+			} else {
+				return result, true
+			}
+		}
+		return selection.Text(), true
+	}
 	element := selection.Find(searchSelector.Selector)
 	var result string
 	if element.Length() > 0 {
@@ -377,6 +511,8 @@ func urlComplete(source string, destination string) string {
 		result = strings.Split(source, "//")[0] + destination
 	} else if strings.HasPrefix(destination, "/") {
 		result = strings.TrimSuffix(source, "/") + destination
+	} else if !strings.HasPrefix(destination, "http:") {
+		result = strings.TrimSuffix(source, "/") + "/" + destination
 	}
 	result = strings.ReplaceAll(result, "\n", "")
 	result = strings.ReplaceAll(result, " ", "")

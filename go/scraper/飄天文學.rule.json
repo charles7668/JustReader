@@ -40,6 +40,18 @@
         "selector": "#content table > tbody > tr:nth-child(1) > td > table > tbody > tr:nth-child(2) > td:nth-child(2)",
         "attribute": "",
         "regex": "作.*?者：(.+)"
+      },
+      "novel_index": {
+        "selector": ".grid > caption > a",
+        "attribute": "href"
+      },
+      "novel_index_chapter_name": {
+        "selector": "ul > li > a",
+        "attribute": ""
+      },
+      "novel_index_chapter_url": {
+        "selector": "ul > li > a",
+        "attribute": "href"
       }
     }
   ]

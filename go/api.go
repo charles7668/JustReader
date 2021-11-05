@@ -35,8 +35,8 @@ const (
 	Success = iota
 	ParamError
 	DatabaseOperationError
-	SearchCoverProcessing
-	SearchCoverReadyToGet
+	Processing
+	ReadyToGet
 	Other
 )
 
@@ -83,11 +83,11 @@ func getNovelByID(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, information)
 }
 
-//addNovels url : /novels/ , Method : POST
+//uploadNovel url : /novels/ , Method : POST
 //add novel file to database
-func addNovels(c *gin.Context) {
-	logger.Println("func enter : main/addNovels")
-	defer logger.Println("func exit : main/addNovels")
+func uploadNovel(c *gin.Context) {
+	logger.Println("func enter : main/uploadNovel")
+	defer logger.Println("func exit : main/uploadNovel")
 	file, err := c.FormFile("file")
 	if checkError(err) {
 		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "param error"})
@@ -273,9 +273,11 @@ func searchCover(c *gin.Context) {
 	runningState := Scraper.GetStatus()
 	if runningState != Scraper.Ready {
 		if runningState == Scraper.ReadyToGet {
-			c.IndentedJSON(http.StatusOK, Message{Status: SearchCoverReadyToGet, Message: "search finished , data is wait for reading"})
+			c.IndentedJSON(http.StatusOK, Message{Status: ReadyToGet, Message: "search finished , data is wait for reading"})
 		} else if runningState == Scraper.Processing {
-			c.IndentedJSON(http.StatusOK, Message{Status: SearchCoverProcessing, Message: "processing , can get current data"})
+			c.IndentedJSON(http.StatusOK, Message{Status: Processing, Message: "processing , can get current data"})
+		} else {
+			c.IndentedJSON(http.StatusOK, Message{Status: Other, Message: "other processing running"})
 		}
 		return
 	}
@@ -293,7 +295,7 @@ func searchCover(c *gin.Context) {
 	searchKey, exist := body["search_key"]
 	if exist {
 		go Scraper.SearchCover(string(searchKey))
-		c.IndentedJSON(http.StatusOK, Message{Status: SearchCoverProcessing, Message: "search start"})
+		c.IndentedJSON(http.StatusOK, Message{Status: Processing, Message: "search start"})
 	} else {
 		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "search key is empty"})
 	}
@@ -323,6 +325,103 @@ func stopSearchCover(c *gin.Context) {
 	} else if Scraper.GetStatus() == Scraper.ReadyToGet {
 		result = Scraper.GetCoverList()
 	}
+	c.IndentedJSON(http.StatusOK, result)
+}
+
+func searchNovel(c *gin.Context) {
+	logger.Println("func enter : main/searchNovel")
+	defer logger.Println("func exit : main/searchNovel")
+	runningState := Scraper.GetStatus()
+	if runningState != Scraper.Ready {
+		if runningState == Scraper.ReadyToGet {
+			c.IndentedJSON(http.StatusOK, Message{Status: ReadyToGet, Message: "search finished , data is wait for reading"})
+		} else if runningState == Scraper.Processing {
+			c.IndentedJSON(http.StatusOK, Message{Status: Processing, Message: "processing , can get current data"})
+		} else {
+			c.IndentedJSON(http.StatusOK, Message{Status: Other, Message: "other processing running"})
+		}
+		return
+	}
+	var body map[string]string
+	bodyData, err := ioutil.ReadAll(c.Request.Body)
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "Param error"})
+		return
+	}
+	err = json.Unmarshal(bodyData, &body)
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "Param error"})
+		return
+	}
+	searchKey, exist := body["search_key"]
+	if exist {
+		go Scraper.SearchNovel(string(searchKey))
+		c.IndentedJSON(http.StatusOK, Message{Status: Processing, Message: "search start"})
+	} else {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "search key is empty"})
+	}
+}
+
+//stopSearchNovel stop search novel and return current list
+func stopSearchNovel(c *gin.Context) {
+	logger.Println("func enter : main/stopSearchNovel")
+	defer logger.Println("func exit : main/stopSearchNovel")
+	var result []Scraper.Novel
+	if Scraper.GetStatus() == Scraper.Processing {
+		Scraper.StopProcessing()
+		for {
+			if Scraper.GetStatus() == Scraper.ReadyToGet {
+				result = Scraper.GetSearchList()
+				break
+			}
+		}
+	} else if Scraper.GetStatus() == Scraper.ReadyToGet {
+		result = Scraper.GetSearchList()
+	}
+	c.IndentedJSON(http.StatusOK, result)
+}
+
+//getSearchNovel get current search list
+func getSearchNovel(c *gin.Context) {
+	logger.Println("func enter : main/getSearchNovel")
+	defer logger.Println("func exit : main/getSearchCover")
+	result := Scraper.GetSearchList()
+	c.IndentedJSON(http.StatusOK, result)
+}
+
+func getNovelInformation(c *gin.Context) {
+	logger.Println("func enter : main/getNovelInformation")
+	defer logger.Println("func exit : main/getNovelInformation")
+	bodyData, err := ioutil.ReadAll(c.Request.Body)
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "param error"})
+		return
+	}
+	var information Scraper.Novel
+	err = json.Unmarshal(bodyData, &information)
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "param error"})
+		return
+	}
+	information = Scraper.GetNovelInformation(information)
+	c.IndentedJSON(http.StatusOK, information)
+}
+
+func getNovelChapter(c *gin.Context) {
+	logger.Println("func enter : main/getNovelChapter")
+	defer logger.Println("func exit : main/getNovelChapter")
+	bodyData, err := ioutil.ReadAll(c.Request.Body)
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "param error"})
+		return
+	}
+	var information Scraper.Novel
+	err = json.Unmarshal(bodyData, &information)
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "param error"})
+		return
+	}
+	result := Scraper.GetNovelChapters(information)
 	c.IndentedJSON(http.StatusOK, result)
 }
 
@@ -421,10 +520,15 @@ func main() {
 	router.POST("/search_cover", searchCover)
 	router.POST("/search_cover/get", getSearchCover)
 	router.POST("/search_cover/stop", stopSearchCover)
+	router.POST("/search", searchNovel)
+	router.POST("/search/stop", stopSearchNovel)
+	router.POST("/search/get", getSearchNovel)
+	router.POST("/novel_information", getNovelInformation)
+	router.POST("/novel_chapter", getNovelChapter)
 	router.POST("/update_time/:rowID", updateAccessTimeByID)
 	router.POST("/update_reading/:rowID", updateReadingByID)
 	router.POST("/delete/:rowID", deleteNovelByID)
-	router.POST("/novels", addNovels)
+	router.POST("/file/novel", uploadNovel)
 	router.POST("/cover/:rowID", addImageByID)
 	router.POST("/use_net_image/:rowID", useNetImageByID)
 	router.POST("/update_setting", updateSetting)
