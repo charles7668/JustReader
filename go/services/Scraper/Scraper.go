@@ -71,8 +71,9 @@ type Rule struct {
 }
 
 type Chapter struct {
-	ChapterName string `json:"chapter_name"`
-	ChapterUrl  string `json:"chapter_url"`
+	ChapterName    string `json:"chapter_name"`
+	ChapterUrl     string `json:"chapter_url"`
+	ChapterContent string `json:"chapter_content"`
 }
 
 type SafeNovels struct {
@@ -192,6 +193,7 @@ func SearchNovel(searchKey string) {
 			break
 		}
 		novels := getNovelListByRule(&rule, searchKey)
+		novels = getNovelsInformation(novels, rule)
 		novelResults.Mutex.Lock()
 		novelResults.Novels = append(novelResults.Novels, novels...)
 		novelResults.Mutex.Unlock()
@@ -205,6 +207,11 @@ func GetSearchList() []Novel {
 	novelResults.Mutex.Lock()
 	result := novelResults.Novels
 	novelResults.Novels = nil
+	if status.runningState == ReadyToGet {
+		status.mutex.Lock()
+		status.runningState = Ready
+		status.mutex.Unlock()
+	}
 	novelResults.Mutex.Unlock()
 	return result
 }
@@ -329,42 +336,53 @@ func getNovelListByRule(rule *Rule, searchTitle string) []Novel {
 }
 
 func getNovelsInformation(novelList []Novel, rule Rule) []Novel {
+	type empty struct {
+	}
+	sem := make(chan empty, len(novelList))
 	for index, novel := range novelList {
-		res, err := http.Get(novel.InformationUrl)
-		if checkError(err) {
-			continue
-		}
-		doc, err := goquery.NewDocumentFromReader(res.Body)
-		//title name
-		parseRule := rule.SearchRule[0].NovelName
-		element := doc.Find("html")
-		result, _ := getTextBySelector(element, parseRule)
-		converted := string(encoding.ConvertBytesToEncoding([]byte(result), rule.Request.CharSet))
-		converted = matchString(converted, parseRule.Regex)
-		novelList[index].Title = converted
-		//author name
-		parseRule = rule.SearchRule[0].NovelAuthor
-		result, exist := getTextBySelector(element, parseRule)
-		converted = string(encoding.ConvertBytesToEncoding([]byte(result), rule.Request.CharSet))
-		converted = matchString(converted, parseRule.Regex)
-		novelList[index].Author = converted
-		//cover
-		converted = ""
-		parseRule = rule.SearchRule[0].Cover
-		result, exist = getTextBySelector(element, parseRule)
-		if exist {
-			converted = urlComplete(rule.SourceURL, result)
-		}
-		novelList[index].Cover = converted
-		//index url
-		converted = ""
-		parseRule = rule.SearchRule[0].NovelIndex
-		result, exist = getTextBySelector(element, parseRule)
-		if exist {
-			converted = urlComplete(rule.SourceURL, result)
-		}
-		novelList[index].IndexUrl = converted
-		responseBodyClose(res.Body)
+		go func(index int, novel Novel, novelList []Novel) {
+			res, err := http.Get(novel.InformationUrl)
+			if checkError(err) {
+				sem <- empty{}
+				return
+			}
+			doc, err := goquery.NewDocumentFromReader(res.Body)
+			//title name
+			parseRule := rule.SearchRule[0].NovelName
+			element := doc.Find("html")
+			result, _ := getTextBySelector(element, parseRule)
+			converted := string(encoding.ConvertBytesToEncoding([]byte(result), rule.Request.CharSet))
+			converted = matchString(converted, parseRule.Regex)
+			novelList[index].Title = converted
+			//author name
+			parseRule = rule.SearchRule[0].NovelAuthor
+			result, exist := getTextBySelector(element, parseRule)
+			converted = string(encoding.ConvertBytesToEncoding([]byte(result), rule.Request.CharSet))
+			converted = matchString(converted, parseRule.Regex)
+			novelList[index].Author = converted
+			//cover
+			converted = ""
+			parseRule = rule.SearchRule[0].Cover
+			result, exist = getTextBySelector(element, parseRule)
+			if exist {
+				converted = urlComplete(rule.SourceURL, result)
+			}
+			novelList[index].Cover = converted
+			//index url
+			converted = ""
+			parseRule = rule.SearchRule[0].NovelIndex
+			result, exist = getTextBySelector(element, parseRule)
+			if exist {
+				converted = urlComplete(rule.SourceURL, result)
+			}
+			novelList[index].IndexUrl = converted
+			responseBodyClose(res.Body)
+			sem <- empty{}
+		}(index, novel, novelList)
+	}
+	// wait for goroutines to finish
+	for i := 0; i < len(novelList); i++ {
+		<-sem
 	}
 	return novelList
 }
@@ -443,19 +461,6 @@ func getNovelChapters(novel Novel, rule Rule) []Chapter {
 }
 
 func getTextBySelector(selection *goquery.Selection, searchSelector SearchSelector) (string, bool) {
-	if len(selection.Nodes) == 1 {
-		if searchSelector.Attribute != "" {
-			var exist bool
-			result, exist := selection.Attr(searchSelector.Attribute)
-			if !exist {
-				result = ""
-				return result, false
-			} else {
-				return result, true
-			}
-		}
-		return selection.Text(), true
-	}
 	element := selection.Find(searchSelector.Selector)
 	var result string
 	if element.Length() > 0 {
@@ -470,6 +475,20 @@ func getTextBySelector(selection *goquery.Selection, searchSelector SearchSelect
 			result = element.First().Text()
 		}
 		return result, true
+	} else {
+		if len(selection.Nodes) == 1 {
+			if searchSelector.Attribute != "" {
+				var exist bool
+				result, exist = selection.Attr(searchSelector.Attribute)
+				if !exist {
+					result = ""
+					return result, false
+				} else {
+					return result, true
+				}
+			}
+			return selection.Text(), true
+		}
 	}
 	return "", false
 }
@@ -511,7 +530,7 @@ func urlComplete(source string, destination string) string {
 		result = strings.Split(source, "//")[0] + destination
 	} else if strings.HasPrefix(destination, "/") {
 		result = strings.TrimSuffix(source, "/") + destination
-	} else if !strings.HasPrefix(destination, "http:") {
+	} else if !strings.HasPrefix(destination, "http") {
 		result = strings.TrimSuffix(source, "/") + "/" + destination
 	}
 	result = strings.ReplaceAll(result, "\n", "")

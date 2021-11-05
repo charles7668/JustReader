@@ -29,11 +29,13 @@ type Information struct {
 	LastAccess     string `json:"last_access"`
 	MD5            string `json:"md5"`
 	Cover          string `json:"cover"`
+	Detail         string `json:"detail"`
 }
 
 type Chapter struct {
 	ChapterName    string `json:"chapter_name"`
 	ChapterContent string `json:"chapter_content"`
+	ChapterUrl     string `json:"chapter_url"`
 }
 
 type Novel struct {
@@ -182,9 +184,16 @@ func CheckNovelExist(fileName string) bool {
 	return checkNovelExist(fileName)
 }
 
-//AddNovel add novel
-func AddNovel(fileName string) (Information, error) {
-	return addNovel(fileName)
+//AddNovelFromFile add novel
+func AddNovelFromFile(fileName string) (Information, error) {
+	return addNovelFromFile(fileName)
+}
+
+//AddNovelFromInformation add novel from information
+func AddNovelFromInformation(novel Information, chapters []Chapter) (Information, error) {
+	logger.Println("func enter : novel/AddNovelFromInformation")
+	defer logger.Println("func exit : novel/AddNovelFromInformation")
+	return addNovelFromInformation(novel, chapters)
 }
 
 //GetChapters get chapter data

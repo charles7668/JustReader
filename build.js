@@ -28,6 +28,19 @@ const buildElectron = () => {
                     "to": "../scraper"
                 }
             ],
+            // "files": [
+            //     "**/*",
+            //     "!.git/*",
+            //     "!.idea/*",
+            //     "!build/*",
+            //     "!build_electron/*",
+            //     "!docs/*",
+            //     "!go/*",
+            //     "!node_modules/*",
+            //     "!public/*",
+            //     "!src/*",
+            //     "!*.md"
+            // ],
             "win": {},
             "extends": null
         },

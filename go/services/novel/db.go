@@ -29,10 +29,10 @@ func checkNovelExist(fileName string) bool {
 	}
 }
 
-//addNovel add novel to database
-func addNovel(fileName string) (Information, error) {
-	logger.Println("func enter : novel/db addNovel")
-	defer logger.Println("func exit : novel/db addNovel")
+//addNovelFromFile add novel to database
+func addNovelFromFile(fileName string) (Information, error) {
+	logger.Println("func enter : novel/db addNovelFromFile")
+	defer logger.Println("func exit : novel/db addNovelFromFile")
 	novel, err := getNovelInformation(fileName)
 	if checkError(err) {
 		return novel.Information, err
@@ -43,7 +43,7 @@ func addNovel(fileName string) (Information, error) {
 	novel.Information.CreateTime = nowTime
 	hash := novel.Information.MD5
 	queryString := fmt.Sprintf(
-		"INSERT INTO NovelInformation (Author, Brief, Name, FileName,CurrentChapter,LastChapter, LastAccess, CreateTime,MD5,Cover) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s','')",
+		"INSERT INTO NovelInformation (Author, Brief, Name, FileName,CurrentChapter,LastChapter, LastAccess, CreateTime,MD5,Cover,Detail) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s','','')",
 		strings.ReplaceAll(novel.Information.Author, "'", "''"),
 		strings.ReplaceAll(novel.Information.Brief, "'", "''"),
 		strings.ReplaceAll(novel.Information.Name, "'", "''"),
@@ -60,15 +60,15 @@ func addNovel(fileName string) (Information, error) {
 	}
 	logger.Println("insert success")
 	logger.Println("create chapter table : " + hash)
-	queryString = "CREATE TABLE IF NOT EXISTS '" + hash + "' (ChapterName text,ChapterContent text)"
+	queryString = "CREATE TABLE IF NOT EXISTS '" + hash + "' (ChapterName text,ChapterContent text , ChapterUrl text)"
 	_, err = db.Exec(queryString)
 	if checkError(err) {
 		return novel.Information, err
 	}
 	logger.Println("insert chapter data")
-	queryString = "INSERT INTO '" + hash + "' (ChapterName,ChapterContent) VALUES "
+	queryString = "INSERT INTO '" + hash + "' (ChapterName,ChapterContent, ChapterUrl) VALUES "
 	for i, value := range novel.Chapters {
-		str := "('" + strings.ReplaceAll(value.ChapterName, "'", "''") + "','" + strings.ReplaceAll(value.ChapterContent, "'", "''") + "')"
+		str := "('" + strings.ReplaceAll(value.ChapterName, "'", "''") + "','" + strings.ReplaceAll(value.ChapterContent, "'", "''") + "', '')"
 		if i != len(novel.Chapters)-1 {
 			str += ","
 		}
@@ -90,7 +90,7 @@ func addNovel(fileName string) (Information, error) {
 
 func selectNovelsFromTable(condition string) ([]Information, error) {
 	var novels []Information
-	var queryString = "SELECT ROWID,* FROM NovelInformation " + condition
+	var queryString = "SELECT ROWID,Author,Brief,Name,CurrentChapter,LastChapter,FileName,LastAccess,CreateTime,MD5,Cover,Detail FROM NovelInformation " + condition
 	result, err := db.Query(queryString)
 	defer result.Close()
 	if err != nil {
@@ -110,7 +110,8 @@ func selectNovelsFromTable(condition string) ([]Information, error) {
 			&information.LastAccess,
 			&information.CreateTime,
 			&information.MD5,
-			&information.Cover)
+			&information.Cover,
+			&information.Detail)
 		if err != nil {
 			return novels, err
 		}
@@ -146,6 +147,50 @@ func getChapters(queryMD5 string) []Chapter {
 		chapters = append(chapters, chapter)
 	}
 	return chapters
+}
+
+//addNovelFromInformation add novel from information
+func addNovelFromInformation(information Information, chapters []Chapter) (Information, error) {
+	logger.Println("func enter : novel.db/addNovelFromInformation")
+	defer logger.Println("func exit : novel.db/addNovelFromInformation")
+	nowTime := time.Now().Format("2006-01-02 15:04:05")
+	information.LastAccess = nowTime
+	information.CreateTime = nowTime
+	queryString := fmt.Sprintf(
+		"INSERT INTO NovelInformation (Author, Brief, Name, FileName,CurrentChapter,LastChapter, LastAccess, CreateTime,MD5,Cover,Detail) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')",
+		strings.ReplaceAll(information.Author, "'", "''"),
+		strings.ReplaceAll(information.Brief, "'", "''"),
+		strings.ReplaceAll(information.Name, "'", "''"),
+		strings.ReplaceAll(information.FileName, "'", "''"),
+		strings.ReplaceAll(information.CurrentChapter, "'", "''"),
+		strings.ReplaceAll(information.LastChapter, "'", "''"),
+		strings.ReplaceAll(nowTime, "'", "''"),
+		strings.ReplaceAll(nowTime, "'", "''"),
+		information.MD5,
+		information.Cover,
+		information.Detail)
+	_, err := db.Exec(queryString)
+	if checkError(err) {
+		return information, err
+	}
+	queryString = "CREATE TABLE IF NOT EXISTS '" + information.MD5 + "' (ChapterName text,ChapterContent text ,ChapterUrl text)"
+	_, err = db.Exec(queryString)
+	if checkError(err) {
+		return information, err
+	}
+	queryString = "INSERT INTO '" + information.MD5 + "' (ChapterName,ChapterContent,ChapterUrl) VALUES "
+	for i, value := range chapters {
+		str := "('" + strings.ReplaceAll(value.ChapterName, "'", "''") + "','" + strings.ReplaceAll(value.ChapterContent, "'", "''") + "' , '" + strings.ReplaceAll(value.ChapterUrl, "'", "''") + "')"
+		if i != len(chapters)-1 {
+			str += ","
+		}
+		queryString += str
+	}
+	_, err = db.Exec(queryString)
+	if checkError(err) {
+		return information, err
+	}
+	return information, nil
 }
 
 //updateAccessTime update access time
@@ -223,7 +268,7 @@ func addImage(rowID int, image string) error {
 func getNovel(rowID int) (Information, error) {
 	logger.Println("func enter : novel/db/getNovel")
 	defer logger.Println("func exit : novel/db/getNovel")
-	queryString := fmt.Sprintf("SELECT ROWID, * from NovelInformation WHERE ROWID=%d", rowID)
+	queryString := fmt.Sprintf("SELECT ROWID,Author,Brief,Name,CurrentChapter,LastChapter,FileName,LastAccess,CreateTime,MD5,Cover,Detail from NovelInformation WHERE ROWID=%d", rowID)
 	var information Information
 	row := db.QueryRow(queryString)
 	err := row.Scan(&information.ID,
@@ -236,7 +281,8 @@ func getNovel(rowID int) (Information, error) {
 		&information.LastAccess,
 		&information.CreateTime,
 		&information.MD5,
-		&information.Cover)
+		&information.Cover,
+		&information.Detail)
 	if checkError(err) {
 		return Information{}, err
 	}

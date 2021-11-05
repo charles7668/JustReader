@@ -1,8 +1,10 @@
 package main
 
 import (
+	"crypto/md5"
 	"database/sql"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/charles7668/novel-reader/services/AppSetting"
@@ -106,7 +108,7 @@ func uploadNovel(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "can't save image"})
 		return
 	}
-	information, err := novel.AddNovel(fileName)
+	information, err := novel.AddNovelFromFile(fileName)
 	if checkError(err) {
 		c.IndentedJSON(http.StatusBadRequest, Message{Status: DatabaseOperationError, Message: "database error"})
 		return
@@ -425,6 +427,54 @@ func getNovelChapter(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, result)
 }
 
+func addNovelFromRemote(c *gin.Context) {
+	logger.Println("func enter : main/addNovelFromRemote")
+	defer logger.Println("func exit : main/addNovelFromRemote")
+	bodyData, err := ioutil.ReadAll(c.Request.Body)
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "param error"})
+		return
+	}
+	var information Scraper.Novel
+	err = json.Unmarshal(bodyData, &information)
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "param error"})
+		return
+	}
+	detail, err := json.Marshal(information)
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "param error"})
+		return
+	}
+	information = Scraper.GetNovelInformation(information)
+	chapters := Scraper.GetNovelChapters(information)
+	var resultChapters []novel.Chapter
+	for _, chapter := range chapters {
+		var temp novel.Chapter
+		temp.ChapterName = chapter.ChapterName
+		temp.ChapterContent = chapter.ChapterContent
+		temp.ChapterUrl = chapter.ChapterUrl
+		resultChapters = append(resultChapters, temp)
+	}
+	var novelInformation novel.Information
+	novelInformation.Name = information.Title
+	novelInformation.Brief = information.Brief
+	novelInformation.FileName = information.InformationUrl
+	novelInformation.Author = information.Author
+	checkSum := md5.Sum([]byte(novelInformation.FileName))
+	novelInformation.MD5 = hex.EncodeToString(checkSum[:])
+	novelInformation.CurrentChapter = "未讀"
+	novelInformation.LastChapter = resultChapters[len(resultChapters)-1].ChapterName
+	novelInformation.Cover = Scraper.GetImageFromURLToBase64(information.Cover)
+	novelInformation.Detail = string(detail)
+	novelInformation, err = novel.AddNovelFromInformation(novelInformation, resultChapters)
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: DatabaseOperationError, Message: "database operation error"})
+		return
+	}
+	c.IndentedJSON(http.StatusOK, novelInformation)
+}
+
 //useNetImageByID use net image
 func useNetImageByID(c *gin.Context) {
 	logger.Println("func enter : main/useNetImageByID")
@@ -472,15 +522,15 @@ func main() {
 	logger = log.New(logWriter, "", log.Ldate|log.Ltime)
 	defer func(logWriter *os.File) {
 		err = logWriter.Close()
-		if err != nil {
+		if checkError(err) {
 			return
 		}
 	}(logWriter)
 	_, _ = file_operation.CreateFileIfNotExist("novel-reader.db")
 	logger.Println("open novel-reader.db")
 	db, err := sql.Open("sqlite3", "novel-reader.db")
-	if err != nil {
-		logger.Fatalln(err)
+	if checkError(err) {
+		return
 	} else {
 		defer func(db *sql.DB) {
 			err = db.Close()
@@ -498,11 +548,12 @@ func main() {
 							    LastAccess text,
 							    CreateTime text,
 							    MD5		   text,
-								Cover      text
+								Cover      text,
+								Detail     text
 							)`
-		_, err := db.Exec(queryString)
-		if err != nil {
-			logger.Fatalln(err)
+		_, err = db.Exec(queryString)
+		if checkError(err) {
+			return
 		}
 	}
 	str, _ := json.Marshal(ServerSetting{URL: "http://localhost:8088"})
@@ -526,6 +577,7 @@ func main() {
 	router.POST("/novel_information", getNovelInformation)
 	router.POST("/novel_chapter", getNovelChapter)
 	router.POST("/update_time/:rowID", updateAccessTimeByID)
+	router.POST("/add/novel", addNovelFromRemote)
 	router.POST("/update_reading/:rowID", updateReadingByID)
 	router.POST("/delete/:rowID", deleteNovelByID)
 	router.POST("/file/novel", uploadNovel)
