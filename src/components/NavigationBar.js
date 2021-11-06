@@ -6,16 +6,28 @@ import {Box, IconButton, Input, Menu, MenuButton, MenuItem, MenuList} from "@cha
 import {HamburgerIcon} from "@chakra-ui/icons";
 import LoadingPage from "./LoadingPage";
 import {AlertContext} from "../App";
+import {Redirect} from "react-router-dom";
 
-function NavigationBar() {
+function NavigationBar(props) {
     const inputRef = useRef()
+    const redirectRef = useRef(props.currentUrl)
+    const [redirect, setRedirect] = useState(false)
     const search = () => {
         // noinspection JSUnresolvedVariable
         window.searchTextChange(inputRef.current.value);
     }
+    const redirectDOM = <Redirect to={redirectRef.current}/>
+    if (redirect) {
+        return redirectDOM
+    }
     return (
         <Box className="NavigationBar" paddingTop={'1px'}>
-            <SettingMenu/>
+            <SettingMenu doRedirect={(path) => {
+                if (redirectRef.current !== path) {
+                    redirectRef.current = path
+                    setRedirect(true)
+                }
+            }}/>
             <Input placeholder="input search text to search title" border={'1px solid'} borderColor={'black'}
                    ref={inputRef}/>
             <Button onClick={search}>Search</Button>
@@ -23,7 +35,7 @@ function NavigationBar() {
     );
 }
 
-function SettingMenu() {
+function SettingMenu(props) {
     const [loading, setLoading] = useState(false)
     const alert = useContext(AlertContext)
     const uploadRef = useRef()
@@ -59,12 +71,18 @@ function SettingMenu() {
         <Menu>
             <MenuButton as={IconButton} icon={<HamburgerIcon/>} color={'black'} height={'100%'}/>
             <MenuList>
+                <MenuItem onClick={() => {
+                    props.doRedirect("/")
+                }}>Home</MenuItem>
                 <MenuItem> Setting </MenuItem>
                 <MenuItem onClick={(e) => {
                     e.preventDefault()
                     // noinspection JSUnresolvedFunction
                     uploadRef.current.click()
                 }}>Upload</MenuItem>
+                <MenuItem onClick={() => {
+                    props.doRedirect("/search")
+                }}>搜尋小說</MenuItem>
             </MenuList>
             <Input type="file" accept=".txt" display={'none'} ref={uploadRef} onChange={startUpload}/>
             {loading === true && <LoadingPage text={"uploading..."}/>}

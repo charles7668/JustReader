@@ -4,7 +4,7 @@ import React, {useContext, useEffect, useState} from "react";
 import "./css/NovelItem.css";
 import {Redirect} from "react-router-dom";
 import LoadingPage from "./LoadingPage";
-import {Box, Menu, MenuButton, IconButton, MenuItem, MenuList} from "@chakra-ui/react";
+import {Box, IconButton, Menu, MenuButton, MenuItem, MenuList} from "@chakra-ui/react";
 import {SettingsIcon} from "@chakra-ui/icons";
 import {AlertContext} from "../App";
 import {AlertDialog, useAlertDialog} from "./Alert"
@@ -94,6 +94,47 @@ function NovelItem(props) {
         </Box>
     );
     return novelView ? redirect : element;
+}
+
+export function NovelItemForSearch(props) {
+    const [loading, setLoading] = useState(false)
+    // const alert = useContext(AlertContext)
+    const [novel, setNovel] = useState({})
+    const [isAlert, alertMessage, alertTitle, okAction, cancelAction, alertDialog, closeAlertDialog] = useAlertDialog()
+    useEffect(() => {
+        if (props.novel !== undefined) {
+            setNovel(props.novel)
+        }
+    }, [props])
+    return (
+        <Box className="NovelItem">
+            <Box className="NovelCover" position={"relative"}>
+                <img
+                    src={novel.cover}
+                    alt="no cover"
+                />
+                <Menu>
+                    <MenuButton as={IconButton} icon={<SettingsIcon/>} position={"absolute"} right={'0'} bottom={'0'}
+                                backgroundColor={"transparent"} color={"white"}/>
+                    <MenuList>
+                        <MenuItem>加入書架</MenuItem>
+                    </MenuList>
+                </Menu>
+            </Box>
+            <div className="NovelInformation">
+                <p onClick={() => {
+                    //todo view list
+                }}> {novel.title} </p>
+                <p>來源：{novel.source_name}</p>
+                <p>簡介:</p>
+                <p className="NovelBrief"
+                   dangerouslySetInnerHTML={{__html: novel.brief?.replaceAll('\n', '<br/>')}}/>
+            </div>
+            {loading === true && <LoadingPage text={""}/>}
+            <AlertDialog isOpen={isAlert} alertMessage={alertMessage} alertTitle={alertTitle} okAction={okAction}
+                         cancelAction={cancelAction} closeAlert={closeAlertDialog}/>
+        </Box>
+    );
 }
 
 export default NovelItem;

@@ -1,0 +1,41 @@
+.SearchPage {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+}
+
+#NavigationBar {
+    overflow: hidden;
+    height: auto;
+    margin-bottom: 10px;
+}
+
+.SearchPage > .MainPanel > .SlideOutPanel {
+    width: 400px;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.SearchPage > .MainPanel::-webkit-scrollbar {
+    display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.SearchPage > .MainPanel {
+    -ms-overflow-style: none; /* IE and Edge */
+    /*noinspection CssUnknownProperty*/
+    scrollbar-width: none; /* Firefox */
+}
+
+.SearchPage > .MainPanel {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    overflow-y: hidden;
+}
+
+.SearchPage > .MainPanel > .NovelList {
+    overflow-y: auto;
+    flex: 1;
+}

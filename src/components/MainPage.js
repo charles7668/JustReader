@@ -6,9 +6,7 @@ import "./MainPage.css";
 function MainPage() {
     return (
         <div className="MainPage">
-            <NavigationBar
-                location="/novel"
-            />
+            <NavigationBar currentUrl={"/"}/>
             <div className="MainPanel">
                 <NovelList/>
             </div>

@@ -1,5 +1,5 @@
-import NovelItem from "./NovelItem";
-import React, {useEffect, useRef, useState} from "react";
+import NovelItem, {NovelItemForSearch} from "./NovelItem";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import './css/NovelList.css'
 import {HStack} from "@chakra-ui/react";
 import CoverSelect from "./CoverSelect";
@@ -78,6 +78,89 @@ function NovelList() {
         <CoverSelect name={coverSelectStatus.name} rowID={coverSelectStatus.rowID} isOpen={coverSelectStatus.isOpen}
                      onClose={() => setCoverSelectStatus({...coverSelectStatus, isOpen: false})}
                      updateCover={updateNovelInformationRef.current}
+        />
+    < /HStack>;
+}
+
+export function NovelListForSearch() {
+    const [searchText, setSearchText] = useState('')
+    const [listItem, setListItem] = useState(undefined)
+    const listRef = useRef([])
+    const runningStateRef = useRef(false)
+    const searchNovelRef = useRef((text) => {
+        console.log('search')
+        const getData = () => {
+            console.log('get')
+            return fetch(window.serverURL + "search/get", {method: 'POST'}).then((res) => res.json()).then((data) => {
+                if (data !== null) {
+                    for (let i = 0; i < data.length; i++) {
+                        listRef.current.push(data[i])
+                    }
+                    setListItem(listRef.current.map((novel, index) => {
+                        return (
+                            <NovelItemForSearch
+                                key={index.toString() + novel.title}
+                                novel={novel}
+                            />
+                        )
+                    }))
+                }
+            })
+        }
+        const option = {
+            method: 'POST',
+            body: JSON.stringify({search_key: text})
+        }
+        fetch(window.serverURL + "search", option).then((res) => {
+            return {status: res.status, data: res.json()}
+        }).then((obj) => {
+            if (obj.status !== 200) {
+                alert(obj.data.message)
+                runningStateRef.current = false
+                return
+            }
+            obj.data.then((data) => {
+                if (data.status === 3) {
+                    console.log('3')
+                    getData().then(() => {
+                        setTimeout(() => {
+                            searchNovelRef.current(text)
+                        }, 1000)
+                    })
+                } else if (data.status === 4) {
+                    console.log('4')
+                    getData().then(() => {
+                        console.log(listRef.current)
+                        runningStateRef.current = false
+                    })
+                }
+            })
+        }).catch(err => {
+            alert(err)
+            runningStateRef.current = false
+        })
+    })
+    useEffect(() => {
+        window.searchTextChange = (text) => {
+            setSearchText(text)
+        }
+        return () => {
+
+        }
+    }, [])
+
+    useMemo(() => {
+        if (runningStateRef.current === false && searchText !== "") {
+            console.log(searchText)
+            listRef.current = []
+            runningStateRef.current = true
+            searchNovelRef.current(searchText)
+        }
+    }, [searchText])
+
+    return <HStack className="NovelList" spacing="20px" wrap="wrap" alignItems={'start'} alignContent={'flex-start'}
+                   paddingLeft={'10px'} paddingRight={'10px'}>{listItem}
+        <div className="LastElement"/>
         />
     < /HStack>;
 }
