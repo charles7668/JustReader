@@ -72,6 +72,7 @@ function SettingMenu(props) {
             <MenuButton as={IconButton} icon={<HamburgerIcon/>} color={'black'} height={'100%'}/>
             <MenuList>
                 <MenuItem onClick={() => {
+                    fetch(window.serverURL + "search/stop", {method: "POST"}).then(r => r)
                     props.doRedirect("/")
                 }}>Home</MenuItem>
                 <MenuItem> Setting </MenuItem>

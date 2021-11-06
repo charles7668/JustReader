@@ -1,6 +1,6 @@
 // noinspection JSUnresolvedVariable
 
-import React, {useContext, useEffect, useState} from "react";
+import React, {useContext, useEffect, useRef, useState} from "react";
 import "./css/NovelItem.css";
 import {Redirect} from "react-router-dom";
 import LoadingPage from "./LoadingPage";
@@ -43,8 +43,6 @@ function NovelItem(props) {
     }
 
     const deleteItem = () => {
-        // let dialog = window.confirm('確定刪除?');
-        // if (!dialog) return;
         alertDialog("確定删除?", "delete", () => {
             const options = {
                 method: 'POST'
@@ -98,9 +96,34 @@ function NovelItem(props) {
 
 export function NovelItemForSearch(props) {
     const [loading, setLoading] = useState(false)
-    // const alert = useContext(AlertContext)
     const [novel, setNovel] = useState({})
+    // noinspection JSUnusedLocalSymbols
     const [isAlert, alertMessage, alertTitle, okAction, cancelAction, alertDialog, closeAlertDialog] = useAlertDialog()
+    const functionRef = useRef({
+        addNovelToShelf: (novel) => {
+            setLoading(true)
+            const option = {
+                method: "POST",
+                body: JSON.stringify(novel)
+            }
+            fetch(window.serverURL + "add/novel", option).then((res) => {
+                return {status: res.status, data: res.json()}
+            }).then((obj) => {
+                if (obj.status !== 200) {
+                    obj.data.then(message => {
+                        alert(message.message)
+                        setLoading(false)
+                    })
+                } else {
+                    obj.data.then((data) => {
+                        console.log(data)
+                        alert('complete')
+                        setLoading(false)
+                    })
+                }
+            })
+        }
+    })
     useEffect(() => {
         if (props.novel !== undefined) {
             setNovel(props.novel)
@@ -117,7 +140,9 @@ export function NovelItemForSearch(props) {
                     <MenuButton as={IconButton} icon={<SettingsIcon/>} position={"absolute"} right={'0'} bottom={'0'}
                                 backgroundColor={"transparent"} color={"white"}/>
                     <MenuList>
-                        <MenuItem>加入書架</MenuItem>
+                        <MenuItem onClick={() => {
+                            functionRef.current.addNovelToShelf(novel)
+                        }}>加入書架</MenuItem>
                     </MenuList>
                 </Menu>
             </Box>

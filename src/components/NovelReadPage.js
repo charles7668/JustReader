@@ -22,12 +22,49 @@ function NovelReadPage(props) {
     const [fontColorPick, setFontColorPick] = useState(false)
     const [pickColor, setPickColor] = useState('#000')
     const [viewChapter, setViewChapter] = useState({title: '', content: 'loading'})
+    const [contentItem, setContentItem] = useState(undefined)
     const novel = useRef({information: {}, chapters: [], titleList: []})
     const numberOfChapters = useRef(0)
     const updateColor = useRef()
     const contentRef = useRef(undefined)
     const completeRef = useRef(false)
     const alert = useContext(AlertContext)
+    const functionRef = useRef({
+        updateViewChapter: (chapter, id) => {
+            if (chapter.chapter_url.length !== 0) {
+                setViewChapter({
+                    title: chapter.chapter_name,
+                    content: "loading"
+                })
+                const option = {
+                    method: "POST",
+                    body: JSON.stringify(chapter)
+                }
+                fetch(window.serverURL + "chapters/" + id, option).then((res) => {
+                    return {status: res.status, data: res.json()}
+                }).then((obj) => {
+                    if (obj.status !== 200) {
+                        setViewChapter({
+                            title: chapter.chapter_name,
+                            content: "載入失敗 , " + obj.data.message
+                        })
+                        return
+                    }
+                    obj.data.then(data => {
+                        setViewChapter({
+                            title: data.chapter_name,
+                            content: data.chapter_content
+                        })
+                    })
+                })
+            } else {
+                setViewChapter({
+                    title: chapter.chapter_name,
+                    content: chapter.chapter_content
+                })
+            }
+        }
+    })
     const updateReadingRef = useRef(async () => {
         const options = {
             method: 'POST',
@@ -67,10 +104,7 @@ function NovelReadPage(props) {
 
     useEffect(() => {
         if (completeRef.current) {
-            setViewChapter({
-                title: novel.current.chapters[chapterIndex].chapter_name,
-                content: novel.current.chapters[chapterIndex].chapter_content
-            })
+            functionRef.current.updateViewChapter(novel.current.chapters[chapterIndex], novel.current.information.id)
         }
     }, [chapterIndex])
 
@@ -79,6 +113,12 @@ function NovelReadPage(props) {
             novel.current.information.current_chapter = viewChapter.title
             // noinspection JSIgnoredPromiseFromCall
             updateReadingRef.current()
+            setContentItem(viewChapter.content.split('\n').map(function (s, index) {
+                s = s.replace(/^\t*?/, '')
+                s = s.replace(/^ *?/, '')
+                s = "　　" + s
+                return <p key={index}>{s}</p>
+            }))
             if (contentRef.current !== undefined) {
                 contentRef.current.scrollTop = 0
             }
@@ -113,7 +153,8 @@ function NovelReadPage(props) {
             numberOfChapters.current = data.length
             novel.current = {information: tempNovel, chapters: data, titleList: data.map(item => item.chapter_name)}
             setChapterIndex(index)
-            setViewChapter({title: data[index].chapter_name, content: data[index].chapter_content})
+            functionRef.current.updateViewChapter(data[index], novel.current.information.id)
+            // setViewChapter({title: data[index].chapter_name, content: data[index].chapter_content})
             completeRef.current = true
         })
         fetch(window.serverURL + "update_time/" + tempNovel.id, options).then(res => res.text()).then(() => {
@@ -127,9 +168,6 @@ function NovelReadPage(props) {
     if (props.location.state === undefined) {
         return goBackRedirect
     }
-    const contentItem = viewChapter.content.split('\n').map(function (s) {
-        return <p>{s}</p>
-    })
     const element = (
         <Box className="NovelReadPage" style={{backgroundColor: backgroundColor, color: fontColor}}>
             <Box className="TitleBar">

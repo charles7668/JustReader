@@ -88,9 +88,7 @@ export function NovelListForSearch() {
     const listRef = useRef([])
     const runningStateRef = useRef(false)
     const searchNovelRef = useRef((text) => {
-        console.log('search')
         const getData = () => {
-            console.log('get')
             return fetch(window.serverURL + "search/get", {method: 'POST'}).then((res) => res.json()).then((data) => {
                 if (data !== null) {
                     for (let i = 0; i < data.length; i++) {
@@ -121,7 +119,6 @@ export function NovelListForSearch() {
             }
             obj.data.then((data) => {
                 if (data.status === 3) {
-                    console.log('3')
                     getData().then(() => {
                         setTimeout(() => {
                             searchNovelRef.current(text)
