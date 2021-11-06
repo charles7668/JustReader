@@ -291,6 +291,7 @@ func getNovelListByRule(rule *Rule, searchTitle string) []Novel {
 		//get list
 		elements := doc.Find(rule.SearchRule[0].SearchList)
 		//get information page url
+		var tempList []Novel
 		elements.Each(func(i int, s *goquery.Selection) {
 			var novel Novel
 			searchRule := rule.SearchRule[0].SearchListInformationUrl
@@ -318,16 +319,17 @@ func getNovelListByRule(rule *Rule, searchTitle string) []Novel {
 			novel.SourceName = rule.SourceName
 			//rule name
 			novel.RuleName = rule.RuleName
-			list = append(list, novel)
+			tempList = append(tempList, novel)
 		})
-		if len(list) >= 1 {
-			if list[0].InformationUrl == previousPageItem {
+		if len(tempList) >= 1 {
+			if tempList[0].InformationUrl == previousPageItem {
 				break
 			}
 		} else {
 			break
 		}
-		previousPageItem = list[0].InformationUrl
+		previousPageItem = tempList[0].InformationUrl
+		list = append(list, tempList...)
 		if !hasPageParam {
 			break
 		}
