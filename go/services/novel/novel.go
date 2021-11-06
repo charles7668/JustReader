@@ -29,6 +29,7 @@ type Information struct {
 	LastAccess     string `json:"last_access"`
 	MD5            string `json:"md5"`
 	Cover          string `json:"cover"`
+	Source         string `json:"source"`
 	Detail         string `json:"detail"`
 }
 

@@ -474,6 +474,7 @@ func addNovelFromRemote(c *gin.Context) {
 	novelInformation.Brief = information.Brief
 	novelInformation.FileName = information.InformationUrl
 	novelInformation.Author = information.Author
+	novelInformation.Source = information.SourceName
 	checkSum := md5.Sum([]byte(novelInformation.FileName))
 	novelInformation.MD5 = hex.EncodeToString(checkSum[:])
 	novelInformation.CurrentChapter = "未讀"

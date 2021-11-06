@@ -41,9 +41,10 @@ func addNovelFromFile(fileName string) (Information, error) {
 	nowTime := time.Now().Format("2006-01-02 15:04:05")
 	novel.Information.LastAccess = nowTime
 	novel.Information.CreateTime = nowTime
+	novel.Information.Source = "local"
 	hash := novel.Information.MD5
 	queryString := fmt.Sprintf(
-		"INSERT INTO NovelInformation (Author, Brief, Name, FileName,CurrentChapter,LastChapter, LastAccess, CreateTime,MD5,Cover,Detail) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s','','')",
+		"INSERT INTO NovelInformation (Author, Brief, Name, FileName,CurrentChapter,LastChapter, LastAccess, CreateTime,MD5,Cover,Detail,Source) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s','','','%s')",
 		strings.ReplaceAll(novel.Information.Author, "'", "''"),
 		strings.ReplaceAll(novel.Information.Brief, "'", "''"),
 		strings.ReplaceAll(novel.Information.Name, "'", "''"),
@@ -52,7 +53,8 @@ func addNovelFromFile(fileName string) (Information, error) {
 		strings.ReplaceAll(novel.Information.LastChapter, "'", "''"),
 		strings.ReplaceAll(nowTime, "'", "''"),
 		strings.ReplaceAll(nowTime, "'", "''"),
-		hash)
+		hash,
+		strings.ReplaceAll(novel.Information.Source, "'", "''"))
 
 	_, err = db.Exec(queryString)
 	if checkError(err) {
@@ -90,7 +92,7 @@ func addNovelFromFile(fileName string) (Information, error) {
 
 func selectNovelsFromTable(condition string) ([]Information, error) {
 	var novels []Information
-	var queryString = "SELECT ROWID,Author,Brief,Name,CurrentChapter,LastChapter,FileName,LastAccess,CreateTime,MD5,Cover,Detail FROM NovelInformation " + condition
+	var queryString = "SELECT ROWID,Author,Brief,Name,CurrentChapter,LastChapter,FileName,LastAccess,CreateTime,MD5,Cover,Detail,Source FROM NovelInformation " + condition
 	result, err := db.Query(queryString)
 	defer result.Close()
 	if err != nil {
@@ -111,7 +113,8 @@ func selectNovelsFromTable(condition string) ([]Information, error) {
 			&information.CreateTime,
 			&information.MD5,
 			&information.Cover,
-			&information.Detail)
+			&information.Detail,
+			&information.Source)
 		if err != nil {
 			return novels, err
 		}
@@ -160,7 +163,7 @@ func addNovelFromInformation(information Information, chapters []Chapter) (Infor
 		return information, errors.New("novel exist")
 	}
 	queryString := fmt.Sprintf(
-		"INSERT INTO NovelInformation (Author, Brief, Name, FileName,CurrentChapter,LastChapter, LastAccess, CreateTime,MD5,Cover,Detail) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')",
+		"INSERT INTO NovelInformation (Author, Brief, Name, FileName,CurrentChapter,LastChapter, LastAccess, CreateTime,MD5,Cover,Detail,Source) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')",
 		strings.ReplaceAll(information.Author, "'", "''"),
 		strings.ReplaceAll(information.Brief, "'", "''"),
 		strings.ReplaceAll(information.Name, "'", "''"),
@@ -171,7 +174,8 @@ func addNovelFromInformation(information Information, chapters []Chapter) (Infor
 		strings.ReplaceAll(nowTime, "'", "''"),
 		information.MD5,
 		information.Cover,
-		information.Detail)
+		information.Detail,
+		information.Source)
 	_, err := db.Exec(queryString)
 	if checkError(err) {
 		return information, err
@@ -284,7 +288,7 @@ func getDetail(rowID int) (string, error) {
 func getNovel(rowID int) (Information, error) {
 	logger.Println("func enter : novel/db/getNovel")
 	defer logger.Println("func exit : novel/db/getNovel")
-	queryString := fmt.Sprintf("SELECT ROWID,Author,Brief,Name,CurrentChapter,LastChapter,FileName,LastAccess,CreateTime,MD5,Cover,Detail from NovelInformation WHERE ROWID=%d", rowID)
+	queryString := fmt.Sprintf("SELECT ROWID,Author,Brief,Name,CurrentChapter,LastChapter,FileName,LastAccess,CreateTime,MD5,Cover,Detail,Source from NovelInformation WHERE ROWID=%d", rowID)
 	var information Information
 	row := db.QueryRow(queryString)
 	err := row.Scan(&information.ID,
@@ -298,7 +302,8 @@ func getNovel(rowID int) (Information, error) {
 		&information.CreateTime,
 		&information.MD5,
 		&information.Cover,
-		&information.Detail)
+		&information.Detail,
+		&information.Source)
 	if checkError(err) {
 		return Information{}, err
 	}

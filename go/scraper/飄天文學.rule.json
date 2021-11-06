@@ -33,7 +33,7 @@
         "selector": "h1",
         "attribute": ""
       },
-      "cover": {
+      "novel_cover": {
         "selector": "#centerm > #content tbody td:nth-child(2) a > img",
         "attribute": "src"
       },

@@ -53,7 +53,6 @@ type SearchSelector struct {
 }
 
 type SearchRule struct {
-	Cover                    SearchSelector `json:"cover"`
 	SearchList               string         `json:"search_list"`
 	SearchListTitle          SearchSelector `json:"search_list_title"`
 	SearchListAuthor         SearchSelector `json:"search_list_author"`
@@ -62,6 +61,7 @@ type SearchRule struct {
 	NovelAuthor              SearchSelector `json:"novel_author"`
 	NovelBrief               SearchSelector `json:"novel_brief"`
 	NovelIndex               SearchSelector `json:"novel_index"`
+	NovelCover               SearchSelector `json:"novel_cover"`
 	NovelIndexChapterName    SearchSelector `json:"novel_index_chapter_name"`
 	NovelIndexChapterUrl     SearchSelector `json:"novel_index_chapter_url"`
 	NovelContent             SearchSelector `json:"novel_content"`
@@ -148,7 +148,9 @@ func getRules() []Rule {
 						continue
 					}
 					rule.RuleName = strings.TrimSuffix(trim, ".rule")
-					rules = append(rules, rule)
+					if rule.Enable {
+						rules = append(rules, rule)
+					}
 				}
 			}
 		}
@@ -358,11 +360,13 @@ func getNovelListByRule(rule *Rule, searchTitle string) []Novel {
 			searchRule = rule.SearchRule[0].SearchListTitle
 			result, exist = getTextBySelector(s, searchRule)
 			converted = string(encoding.ConvertBytesToEncoding([]byte(result), rule.Request.CharSet))
+			converted = matchString(converted, searchRule.Regex)
 			novel.Title = converted
 			//get author
 			searchRule = rule.SearchRule[0].SearchListAuthor
 			result, exist = getTextBySelector(s, searchRule)
 			converted = string(encoding.ConvertBytesToEncoding([]byte(result), rule.Request.CharSet))
+			converted = matchString(converted, searchRule.Regex)
 			novel.Author = converted
 			//source name
 			novel.SourceName = rule.SourceName
@@ -398,41 +402,51 @@ func getNovelsInformation(novelList []Novel, rule Rule) []Novel {
 				return
 			}
 			doc, err := goquery.NewDocumentFromReader(res.Body)
+			element := doc.Find("html")
 			//title name
 			parseRule := rule.SearchRule[0].NovelName
-			element := doc.Find("html")
-			result, _ := getTextBySelector(element, parseRule)
-			converted := string(encoding.ConvertBytesToEncoding([]byte(result), rule.Request.CharSet))
-			converted = matchString(converted, parseRule.Regex)
-			novelList[index].Title = converted
+			if parseRule.Selector != "" {
+				result, _ := getTextBySelector(element, parseRule)
+				converted := string(encoding.ConvertBytesToEncoding([]byte(result), rule.Request.CharSet))
+				converted = matchString(converted, parseRule.Regex)
+				novelList[index].Title = converted
+			}
 			//author name
 			parseRule = rule.SearchRule[0].NovelAuthor
-			result, exist := getTextBySelector(element, parseRule)
-			converted = string(encoding.ConvertBytesToEncoding([]byte(result), rule.Request.CharSet))
-			converted = matchString(converted, parseRule.Regex)
-			novelList[index].Author = converted
+			if parseRule.Selector != "" {
+				result, _ := getTextBySelector(element, parseRule)
+				converted := string(encoding.ConvertBytesToEncoding([]byte(result), rule.Request.CharSet))
+				converted = matchString(converted, parseRule.Regex)
+				novelList[index].Author = converted
+			}
 			//brief
 			parseRule = rule.SearchRule[0].NovelBrief
-			result, exist = getTextBySelector(element, parseRule)
-			converted = string(encoding.ConvertBytesToEncoding([]byte(result), rule.Request.CharSet))
-			converted = matchString(converted, parseRule.Regex)
-			novelList[index].Brief = converted
+			if parseRule.Selector != "" {
+				result, _ := getTextBySelector(element, parseRule)
+				converted := string(encoding.ConvertBytesToEncoding([]byte(result), rule.Request.CharSet))
+				converted = matchString(converted, parseRule.Regex)
+				novelList[index].Brief = converted
+			}
 			//cover
-			converted = ""
-			parseRule = rule.SearchRule[0].Cover
-			result, exist = getTextBySelector(element, parseRule)
-			if exist {
-				converted = urlComplete(rule.SourceURL, result)
+			parseRule = rule.SearchRule[0].NovelCover
+			if parseRule.Selector != "" {
+				result, exist := getTextBySelector(element, parseRule)
+				var converted string
+				if exist {
+					converted = urlComplete(rule.SourceURL, result)
+				}
+				novelList[index].Cover = converted
 			}
-			novelList[index].Cover = converted
 			//index url
-			converted = ""
 			parseRule = rule.SearchRule[0].NovelIndex
-			result, exist = getTextBySelector(element, parseRule)
-			if exist {
-				converted = urlComplete(rule.SourceURL, result)
+			if parseRule.Selector != "" {
+				result, exist := getTextBySelector(element, parseRule)
+				var converted string
+				if exist {
+					converted = urlComplete(rule.SourceURL, result)
+				}
+				novelList[index].IndexUrl = converted
 			}
-			novelList[index].IndexUrl = converted
 			responseBodyClose(res.Body)
 			sem <- empty{}
 		}(index, novel, novelList)
@@ -517,7 +531,7 @@ func GetNovelChapter(chapter Chapter, detail string) (Chapter, error) {
 			if !checkError(err) {
 				converted = regex.ReplaceAllString(converted, "")
 			}
-			text += converted
+			text += converted + "\n"
 		}
 	})
 	chapter.ChapterContent = text
@@ -557,7 +571,11 @@ func getNovelChapters(novel Novel, rule Rule) []Chapter {
 			var converted string
 			text, exist := getTextBySelector(s, parseRule)
 			if exist {
-				converted = urlComplete(novel.IndexUrl, text)
+				if strings.HasPrefix(text, "/") {
+					converted = urlComplete(rule.SourceURL, text)
+				} else {
+					converted = urlComplete(novel.IndexUrl, text)
+				}
 			}
 			result[i].ChapterUrl = converted
 		}

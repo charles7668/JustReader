@@ -80,6 +80,7 @@ function NovelItem(props) {
                 <p onClick={() => {
                     setNovelView(true)
                 }}> {novel.name} </p>
+                <p>來源:{novel.source}</p>
                 <p>{novel.current_chapter}</p>
                 <p>{novel.last_chapter}</p>
                 <p>簡介:</p>

@@ -23,7 +23,7 @@
         "selector": ".book-info > h1 > em",
         "attribute": ""
       },
-      "cover": {
+      "novel_cover": {
         "selector": "#bookImg > img",
         "attribute": "src"
       }
