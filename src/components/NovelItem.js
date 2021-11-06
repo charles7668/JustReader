@@ -15,6 +15,25 @@ function NovelItem(props) {
     const [novel, setNovel] = useState({})
     const alert = useContext(AlertContext)
     const [isAlert, alertMessage, alertTitle, okAction, cancelAction, alertDialog, closeAlertDialog] = useAlertDialog()
+    const functionRef = useRef({
+        updateChapters: (rowID) => {
+            setLoading(true)
+            fetch(window.serverURL + "update/chapters/" + rowID, {method: "POST"}).then((res) => {
+                return {
+                    status: res.status,
+                    data: res.json()
+                }
+            }).then((obj) => {
+                if (obj.status !== 200) {
+                    alert('update failed')
+                    setLoading(false)
+                } else {
+                    alert('update success')
+                    setLoading(false)
+                }
+            })
+        }
+    })
     useEffect(() => {
         setNovel(props.novelInformation)
     }, [props.novelInformation])
@@ -73,6 +92,10 @@ function NovelItem(props) {
                         <MenuItem onClick={uploadCover}>上傳圖片</MenuItem>
                         <MenuItem onClick={deleteItem}>Delete</MenuItem>
                         <MenuItem onClick={props.coverSelect}>搜尋圖片</MenuItem>
+                        {novel.source !== "local" &&
+                        <MenuItem onClick={() => {
+                            functionRef.current.updateChapters(novel.id)
+                        }}>Update</MenuItem>}
                     </MenuList>
                 </Menu>
             </Box>

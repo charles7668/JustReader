@@ -65,6 +65,7 @@ type SearchRule struct {
 	NovelIndexChapterName    SearchSelector `json:"novel_index_chapter_name"`
 	NovelIndexChapterUrl     SearchSelector `json:"novel_index_chapter_url"`
 	NovelContent             SearchSelector `json:"novel_content"`
+	NovelIndexLastChapter    SearchSelector `json:"novel_index_last_chapter"`
 }
 
 type Rule struct {

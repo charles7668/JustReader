@@ -253,3 +253,7 @@ func closeFile(file *os.File) {
 	err := file.Close()
 	checkError(err)
 }
+
+func UpdateChapter(rowID int, chapters []Chapter) error {
+	return updateChapters(rowID, chapters)
+}

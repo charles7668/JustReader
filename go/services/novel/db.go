@@ -309,3 +309,34 @@ func getNovel(rowID int) (Information, error) {
 	}
 	return information, err
 }
+
+func updateChapters(rowID int, chapters []Chapter) error {
+	queryString := fmt.Sprintf("SELECT MD5 FROM NovelInformation WHERE ROWID='%d'", rowID)
+	row := db.QueryRow(queryString)
+	if checkError(row.Err()) {
+		return row.Err()
+	}
+	var md5 string
+	err := row.Scan(&md5)
+	if checkError(err) {
+		return err
+	}
+	queryString = fmt.Sprintf("DELETE FROM '%s' WHERE TRUE", md5)
+	_, err = db.Exec(queryString)
+	if checkError(err) {
+		return err
+	}
+	queryString = "INSERT INTO '" + md5 + "' (ChapterName,ChapterContent,ChapterUrl) VALUES "
+	for i, value := range chapters {
+		str := "('" + strings.ReplaceAll(value.ChapterName, "'", "''") + "','" + strings.ReplaceAll(value.ChapterContent, "'", "''") + "' , '" + strings.ReplaceAll(value.ChapterUrl, "'", "''") + "')"
+		if i != len(chapters)-1 {
+			str += ","
+		}
+		queryString += str
+	}
+	_, err = db.Exec(queryString)
+	if checkError(err) {
+		return err
+	}
+	return nil
+}

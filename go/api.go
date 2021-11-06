@@ -493,6 +493,42 @@ func addNovelFromRemote(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, novelInformation)
 }
 
+func updateChapters(c *gin.Context) {
+	logger.Println("func enter : main/updateChapters")
+	defer logger.Println("func exit : main/updateChapters")
+	rowID, err := strconv.Atoi(c.Param("id"))
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "param error"})
+		return
+	}
+	novelInformation, err := novel.GetNovel(rowID)
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: DatabaseOperationError, Message: "database error"})
+		return
+	}
+	var information Scraper.Novel
+	err = json.Unmarshal([]byte(novelInformation.Detail), &information)
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: DatabaseOperationError, Message: "database error"})
+		return
+	}
+	scraperChapters := Scraper.GetNovelChapters(information)
+	var chapters []novel.Chapter
+	for _, chapter := range scraperChapters {
+		var temp novel.Chapter
+		temp.ChapterName = chapter.ChapterName
+		temp.ChapterContent = chapter.ChapterContent
+		temp.ChapterUrl = chapter.ChapterUrl
+		chapters = append(chapters, temp)
+	}
+	err = novel.UpdateChapter(rowID, chapters)
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: DatabaseOperationError, Message: "database error"})
+		return
+	}
+	c.IndentedJSON(http.StatusOK, Message{Status: Success, Message: "Success"})
+}
+
 //useNetImageByID use net image
 func useNetImageByID(c *gin.Context) {
 	logger.Println("func enter : main/useNetImageByID")
@@ -585,6 +621,7 @@ func main() {
 	router.GET("/novels", getNovels)
 	router.GET("/chapters/:id", getNovelChapterByID)
 	router.POST("/chapters/:id", getNovelChapter)
+	router.POST("/update/chapters/:id", updateChapters)
 	router.GET("/novels/:id", getNovelByID)
 	router.GET("/setting", getSetting)
 	router.POST("/search_cover", searchCover)
