@@ -412,19 +412,32 @@ func getNovelInformation(c *gin.Context) {
 func getNovelChapter(c *gin.Context) {
 	logger.Println("func enter : main/getNovelChapter")
 	defer logger.Println("func exit : main/getNovelChapter")
+	id, err := strconv.Atoi(c.Param("id"))
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "param error"})
+		return
+	}
 	bodyData, err := ioutil.ReadAll(c.Request.Body)
 	if checkError(err) {
 		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "param error"})
 		return
 	}
-	var information Scraper.Novel
-	err = json.Unmarshal(bodyData, &information)
+	var chapter Scraper.Chapter
+	err = json.Unmarshal(bodyData, &chapter)
 	if checkError(err) {
 		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "param error"})
 		return
 	}
-	result := Scraper.GetNovelChapters(information)
-	c.IndentedJSON(http.StatusOK, result)
+	detail, err := novel.GetDetail(id)
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: DatabaseOperationError, Message: "db error"})
+		return
+	}
+	chapter, err = Scraper.GetNovelChapter(chapter, detail)
+	if checkError(err) {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: Other, Message: err.Error()})
+	}
+	c.IndentedJSON(http.StatusOK, chapter)
 }
 
 func addNovelFromRemote(c *gin.Context) {
@@ -469,7 +482,11 @@ func addNovelFromRemote(c *gin.Context) {
 	novelInformation.Detail = string(detail)
 	novelInformation, err = novel.AddNovelFromInformation(novelInformation, resultChapters)
 	if checkError(err) {
-		c.IndentedJSON(http.StatusBadRequest, Message{Status: DatabaseOperationError, Message: "database operation error"})
+		if err.Error() == "novel exist" {
+			c.IndentedJSON(http.StatusBadRequest, Message{Status: DatabaseOperationError, Message: "小說已存在"})
+		} else {
+			c.IndentedJSON(http.StatusBadRequest, Message{Status: DatabaseOperationError, Message: "database operation error"})
+		}
 		return
 	}
 	c.IndentedJSON(http.StatusOK, novelInformation)
@@ -566,6 +583,7 @@ func main() {
 	router.Use(static.Serve("/", static.LocalFile(StaticFilePath, true)))
 	router.GET("/novels", getNovels)
 	router.GET("/chapters/:id", getNovelChapterByID)
+	router.POST("/chapters/:id", getNovelChapter)
 	router.GET("/novels/:id", getNovelByID)
 	router.GET("/setting", getSetting)
 	router.POST("/search_cover", searchCover)
@@ -575,7 +593,6 @@ func main() {
 	router.POST("/search/stop", stopSearchNovel)
 	router.POST("/search/get", getSearchNovel)
 	router.POST("/novel_information", getNovelInformation)
-	router.POST("/novel_chapter", getNovelChapter)
 	router.POST("/update_time/:rowID", updateAccessTimeByID)
 	router.POST("/add/novel", addNovelFromRemote)
 	router.POST("/update_reading/:rowID", updateReadingByID)

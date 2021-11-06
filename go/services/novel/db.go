@@ -134,7 +134,7 @@ func getNovels() ([]Information, error) {
 
 //getChapters get chapter by md5 string
 func getChapters(queryMD5 string) []Chapter {
-	queryString := "SELECT * FROM '" + queryMD5 + "'"
+	queryString := "SELECT ChapterName , ChapterContent , ChapterUrl FROM '" + queryMD5 + "'"
 	res, err := db.Query(queryString)
 	if err != nil {
 		return []Chapter{{ChapterName: "error", ChapterContent: "error"}}
@@ -143,7 +143,7 @@ func getChapters(queryMD5 string) []Chapter {
 	var chapters []Chapter
 	for res.Next() {
 		var chapter Chapter
-		res.Scan(&chapter.ChapterName, &chapter.ChapterContent)
+		res.Scan(&chapter.ChapterName, &chapter.ChapterContent, &chapter.ChapterUrl)
 		chapters = append(chapters, chapter)
 	}
 	return chapters
@@ -156,6 +156,9 @@ func addNovelFromInformation(information Information, chapters []Chapter) (Infor
 	nowTime := time.Now().Format("2006-01-02 15:04:05")
 	information.LastAccess = nowTime
 	information.CreateTime = nowTime
+	if checkNovelExist(information.FileName) {
+		return information, errors.New("novel exist")
+	}
 	queryString := fmt.Sprintf(
 		"INSERT INTO NovelInformation (Author, Brief, Name, FileName,CurrentChapter,LastChapter, LastAccess, CreateTime,MD5,Cover,Detail) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')",
 		strings.ReplaceAll(information.Author, "'", "''"),
@@ -262,6 +265,19 @@ func addImage(rowID int, image string) error {
 	}
 	logger.Println("func exit : novel/db addImage")
 	return nil
+}
+
+func getDetail(rowID int) (string, error) {
+	logger.Println("func enter : novel/db/getDetail")
+	defer logger.Println("func exit : novel/db/getDetail")
+	queryString := fmt.Sprintf("SELECT Detail FROM NovelInformation WHERE ROWID='%d'", rowID)
+	row := db.QueryRow(queryString)
+	var result string
+	err := row.Scan(&result)
+	if checkError(err) {
+		return "", err
+	}
+	return result, nil
 }
 
 //getNovel get novel by md5

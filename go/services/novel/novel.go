@@ -234,6 +234,10 @@ func AddImage(rowID int, image string) error {
 	return addImage(rowID, image)
 }
 
+func GetDetail(rowID int) (string, error) {
+	return getDetail(rowID)
+}
+
 //checkError handle error
 func checkError(err error) bool {
 	if err != nil {

@@ -50,9 +50,11 @@ func ConvertUTF8ToEncoding(utf8 string, charset string) string {
 func GetEncoder(charset string) transform.Transformer {
 	encoder := unicode.UTF8.NewEncoder().Transformer
 	switch charset {
-	case "GB18030", "GBK":
+	case "GBK":
+		encoder = simplifiedchinese.GBK.NewEncoder()
+	case "GB18030":
 		encoder = simplifiedchinese.GB18030.NewEncoder()
-	case "UTF-16LE":
+	case "UTF-16LE", "UTF-16":
 		encoder = unicode.BOMOverride(unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewEncoder())
 	default:
 	}
@@ -63,9 +65,11 @@ func GetEncoder(charset string) transform.Transformer {
 func GetDecoder(charset string) transform.Transformer {
 	decoder := unicode.UTF8.NewDecoder().Transformer
 	switch charset {
-	case "GB18030", "GBK":
+	case "GBK":
+		decoder = simplifiedchinese.GBK.NewDecoder()
+	case "GB18030":
 		decoder = simplifiedchinese.GB18030.NewDecoder()
-	case "UTF-16LE":
+	case "UTF-16LE", "UTF-16":
 		decoder = unicode.BOMOverride(unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewDecoder())
 	default:
 	}

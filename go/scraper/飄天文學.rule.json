@@ -1,4 +1,5 @@
 {
+  "enable": true,
   "source_url": "https://www.ptwxz.com",
   "source_name": "飄天文學",
   "request": {
@@ -41,6 +42,11 @@
         "attribute": "",
         "regex": "作.*?者：(.+)"
       },
+      "novel_brief": {
+        "selector": "#content table > tbody > tr:nth-child(4) > td > table > tbody > tr > td:nth-child(2) > div",
+        "content": "#text",
+        "regex": "内容简介：(.*)[\t\n ]*$"
+      },
       "novel_index": {
         "selector": ".grid > caption > a",
         "attribute": "href"
@@ -52,6 +58,10 @@
       "novel_index_chapter_url": {
         "selector": "ul > li > a",
         "attribute": "href"
+      },
+      "novel_content": {
+        "selector": "body",
+        "content": "#text"
       }
     }
   ]

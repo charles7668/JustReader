@@ -3,6 +3,7 @@ package Scraper
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
 	"github.com/charles7668/novel-reader/services/encoding"
@@ -43,10 +44,12 @@ type Request struct {
 }
 
 type SearchSelector struct {
-	Selector  string `json:"selector"`
-	Attribute string `json:"attribute"`
-	Regex     string `json:"regex"`
-	UrlParam  string `json:"url_param"`
+	Selector     string `json:"selector"`
+	Attribute    string `json:"attribute"`
+	Regex        string `json:"regex"`
+	UrlParam     string `json:"url_param"`
+	Content      string `json:"content"`
+	ContentRegex string `json:"content_regex"`
 }
 
 type SearchRule struct {
@@ -57,12 +60,15 @@ type SearchRule struct {
 	SearchListInformationUrl SearchSelector `json:"search_list_information_url"`
 	NovelName                SearchSelector `json:"novel_name"`
 	NovelAuthor              SearchSelector `json:"novel_author"`
+	NovelBrief               SearchSelector `json:"novel_brief"`
 	NovelIndex               SearchSelector `json:"novel_index"`
 	NovelIndexChapterName    SearchSelector `json:"novel_index_chapter_name"`
 	NovelIndexChapterUrl     SearchSelector `json:"novel_index_chapter_url"`
+	NovelContent             SearchSelector `json:"novel_content"`
 }
 
 type Rule struct {
+	Enable     bool         `json:"enable"`
 	RuleName   string       `json:"rule_name"`
 	SourceURL  string       `json:"source_url"`
 	SourceName string       `json:"source_name"`
@@ -150,6 +156,41 @@ func getRules() []Rule {
 	return rules
 }
 
+//getRule get rule from scraper/*.rule.json file
+func getRule(ruleName string) Rule {
+	_, err := os.Stat("scraper")
+	var dirInfo []fs.FileInfo
+	if !os.IsNotExist(err) {
+		dirInfo, err = ioutil.ReadDir("scraper")
+		if checkError(err) {
+			return Rule{}
+		}
+	}
+	for _, info := range dirInfo {
+		if !info.IsDir() {
+			if path.Ext(info.Name()) == ".json" {
+				trim := strings.TrimSuffix(info.Name(), ".json")
+				if path.Ext(trim) == ".rule" {
+					read, err := ioutil.ReadFile("scraper/" + info.Name())
+					if checkError(err) {
+						continue
+					}
+					var rule Rule
+					err = json.Unmarshal(read, &rule)
+					if checkError(err) {
+						continue
+					}
+					rule.RuleName = strings.TrimSuffix(trim, ".rule")
+					if rule.RuleName == ruleName {
+						return rule
+					}
+				}
+			}
+		}
+	}
+	return Rule{}
+}
+
 //SearchCover search cover from site
 func SearchCover(searchTitle string) {
 	if status.runningState != Ready {
@@ -173,7 +214,11 @@ func SearchCover(searchTitle string) {
 		novelResults.Mutex.Unlock()
 	}
 	status.mutex.Lock()
-	status.runningState = ReadyToGet
+	if status.runningState == Stopping {
+		status.runningState = Ready
+	} else {
+		status.runningState = ReadyToGet
+	}
 	status.mutex.Unlock()
 }
 
@@ -199,7 +244,11 @@ func SearchNovel(searchKey string) {
 		novelResults.Mutex.Unlock()
 	}
 	status.mutex.Lock()
-	status.runningState = ReadyToGet
+	if status.runningState == Stopping {
+		status.runningState = Ready
+	} else {
+		status.runningState = ReadyToGet
+	}
 	status.mutex.Unlock()
 }
 
@@ -362,6 +411,12 @@ func getNovelsInformation(novelList []Novel, rule Rule) []Novel {
 			converted = string(encoding.ConvertBytesToEncoding([]byte(result), rule.Request.CharSet))
 			converted = matchString(converted, parseRule.Regex)
 			novelList[index].Author = converted
+			//brief
+			parseRule = rule.SearchRule[0].NovelBrief
+			result, exist = getTextBySelector(element, parseRule)
+			converted = string(encoding.ConvertBytesToEncoding([]byte(result), rule.Request.CharSet))
+			converted = matchString(converted, parseRule.Regex)
+			novelList[index].Brief = converted
 			//cover
 			converted = ""
 			parseRule = rule.SearchRule[0].Cover
@@ -421,6 +476,54 @@ func GetNovelChapters(novel Novel) []Chapter {
 	return result
 }
 
+func GetNovelChapter(chapter Chapter, detail string) (Chapter, error) {
+	logger.Println("func enter : Scraper/GetNovelChapter")
+	defer logger.Println("func exit : Scraper/GetNovelChapter")
+	if chapter.ChapterUrl == "" {
+		return chapter, errors.New("chapter url not is empty")
+	}
+	var novel Novel
+	err := json.Unmarshal([]byte(detail), &novel)
+	if checkError(err) {
+		return chapter, err
+	} else if novel.RuleName == "" {
+		return chapter, errors.New("rule name is empty")
+	}
+	rule := getRule(novel.RuleName)
+	res, err := http.Get(chapter.ChapterUrl)
+	if checkError(err) {
+		return chapter, err
+	}
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+	if checkError(err) {
+		return chapter, err
+	}
+	html := doc.Find("html")
+	defer responseBodyClose(res.Body)
+	element := html.Find(rule.SearchRule[0].NovelContent.Selector)
+	var text string
+	if element.Length() < 1 {
+		return chapter, errors.New("could not get content")
+	}
+	element.Each(func(i int, s *goquery.Selection) {
+		temp, exist := getTextBySelector(s, rule.SearchRule[0].NovelContent)
+		if exist {
+			converted := string(encoding.ConvertBytesToEncoding(encoding.ConvertBytesToEncoding([]byte(temp), rule.Request.CharSet), "UTF-8"))
+			regex, err := regexp.Compile("^[\n ]*")
+			if !checkError(err) {
+				converted = regex.ReplaceAllString(converted, "")
+			}
+			regex, err = regexp.Compile("[\n ]*$")
+			if !checkError(err) {
+				converted = regex.ReplaceAllString(converted, "")
+			}
+			text += converted
+		}
+	})
+	chapter.ChapterContent = text
+	return chapter, nil
+}
+
 func getNovelChapters(novel Novel, rule Rule) []Chapter {
 	logger.Println("func enter : Scraper/getNovelChapters")
 	defer logger.Println("func exit : Scraper/getNovelChapters")
@@ -474,7 +577,8 @@ func getTextBySelector(selection *goquery.Selection, searchSelector SearchSelect
 				return result, false
 			}
 		} else {
-			result = element.First().Text()
+			result = element.Text()
+			result = strings.ReplaceAll(result, "\xc2\xa0", "") + "\n"
 		}
 		return result, true
 	} else {
@@ -489,6 +593,19 @@ func getTextBySelector(selection *goquery.Selection, searchSelector SearchSelect
 					return result, true
 				}
 			}
+			if searchSelector.Content != "" {
+				result = ""
+				selection.Contents().Each(func(i int, s *goquery.Selection) {
+					if goquery.NodeName(s) == searchSelector.Content {
+						temp := s.Text()
+						temp = strings.ReplaceAll(temp, "\xc2\xa0", "") + "\n"
+						result += temp
+					}
+				})
+				return result, true
+			}
+			temp := selection.Text()
+			temp = strings.ReplaceAll(temp, "\xc2\xa0", "") + "\n"
 			return selection.Text(), true
 		}
 	}
