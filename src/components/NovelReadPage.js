@@ -114,8 +114,7 @@ function NovelReadPage(props) {
             // noinspection JSIgnoredPromiseFromCall
             updateReadingRef.current()
             setContentItem(viewChapter.content.split('\n').map(function (s, index) {
-                s = s.replace(/^\t*?/, '')
-                s = s.replace(/^ *?/, '')
+                s = s.replace(/^[\t　 \n]*/, '')
                 s = "　　" + s
                 return <p key={index}>{s}</p>
             }))
