@@ -150,7 +150,15 @@ func getNovelInformation(path string) (Novel, error) {
 					}
 				}
 				if len(split) >= 2 {
-					contentKeyword = split[0]
+					if *keywordMap["title"] == "" {
+						temp := strings.Split(split[0], " ")
+						*keywordMap["title"] = temp[0]
+						if len(temp) > 1 {
+							contentKeyword = split[1]
+						}
+					} else {
+						contentKeyword = split[0]
+					}
 					content = split[1]
 					for i := 2; i < len(split); i++ {
 						content += splitKeyword[index] + split[i]
@@ -162,6 +170,13 @@ func getNovelInformation(path string) (Novel, error) {
 						chapterStart = true
 						contentKeyword = s
 						startContent = true
+					} else {
+						_, ok := keywordMap[s]
+						if ok {
+							contentKeyword = s
+							startContent = true
+							continue
+						}
 					}
 					if s != "" && !chapterStart {
 						*keywordMap["title"] = s
