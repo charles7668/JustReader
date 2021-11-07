@@ -162,6 +162,9 @@ function NovelReadPage(props) {
         })
     }, [alert, props.location.state])
 
+    useEffect(() => {
+        document.title = "Reading"
+    }, [])
 
     const goBackRedirect = <Redirect to="/"/>;
     //if refresh page then back to home

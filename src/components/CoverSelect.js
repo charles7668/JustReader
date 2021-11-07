@@ -1,7 +1,6 @@
 import {
     Box,
-    Button, Image,
-    Modal,
+    Button, Image, Modal,
     ModalBody, ModalContent,
     ModalFooter,
     ModalHeader,
@@ -20,11 +19,10 @@ function CoverSelect(props) {
     const alert = useContext(AlertContext)
     const selectedRef = useRef(0)
     const runningStateRef = useRef(false)
+    const listRef = useRef([])
     const onSubmitRef = useRef((rowID) => {
             setSubmitLoading(true)
-            if (runningStateRef.current === true) {
-                fetch(window.serverURL + "search_cover/stop", {method: "POST"}).then(r => r)
-            }
+            fetch(window.serverURL + "search_cover/stop", {method: "POST"}).then(r => r)
             const option = {
                 method: "POST",
                 body: JSON.stringify({url: selectedRef.current})
@@ -35,7 +33,7 @@ function CoverSelect(props) {
                     props.updateCover(rowID)
                     setSubmitLoading(false)
                     props.onClose()
-                }, 100)
+                }, 300)
             }).catch((err) => {
                 alert(err)
                 setSubmitLoading(false)
@@ -46,19 +44,19 @@ function CoverSelect(props) {
     isOpen = props.isOpen
     useEffect(() => {
         if (isOpen === true) {
+            listRef.current = []
             const searchCover = () => {
                 setIsLoading(true)
                 runningStateRef.current = true
-                const list = []
                 const getCoverList = (list) => {
-                    fetch(window.serverURL + "search_cover/get", {method: "POST"}).then((res) => res.json()).then((data) => {
+                    return fetch(window.serverURL + "search_cover/get", {method: "POST"}).then((res) => res.json()).then((data) => {
                         if (data !== null) {
                             for (let i = 0; i < data.length; i++) {
                                 list.push(data[i])
                             }
                             setRadioList(list.map((url, index) => {
                                 return (
-                                    <Radio value={index} onChange={() => selectedRef.current = url}>
+                                    <Radio key={url} value={index} onChange={() => selectedRef.current = url}>
                                         <Image
                                             width={"250px"}
                                             height={"300px"}
@@ -87,12 +85,14 @@ function CoverSelect(props) {
                     } else {
                         obj.data.then((message) => {
                             if (message.status === 3) {
-                                getCoverList(list)
-                                setTimeout(searchCover, 1000)
+                                getCoverList(listRef.current).then(() => {
+                                    setTimeout(searchCover, 1000)
+                                })
                             } else if (message.status === 4) {
-                                getCoverList(list)
-                                runningStateRef.current = false
-                                setIsLoading(false)
+                                getCoverList(listRef.current).then(() => {
+                                    runningStateRef.current = false
+                                    setIsLoading(false)
+                                })
                             }
                         });
                     }
@@ -115,7 +115,7 @@ function CoverSelect(props) {
                 <ModalBody>
                     {isLoading && <LoadingPage height={"100px"} backgroundColor={"transparent"} text="loading"/>}
                     {!isLoading &&
-                    <RadioGroup defaultValue="1" defaultChecked={"true"}>
+                    <RadioGroup position={"relative"}>
                         <Stack>
                             {radioList}
                         </Stack>

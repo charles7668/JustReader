@@ -12,10 +12,19 @@ function NavigationBar(props) {
     const inputRef = useRef()
     const redirectRef = useRef(props.currentUrl)
     const [redirect, setRedirect] = useState(false)
-    const search = () => {
-        // noinspection JSUnresolvedVariable
-        window.searchTextChange(inputRef.current.value);
-    }
+    const functionRef = useRef(
+        {
+            search: () => {
+                // noinspection JSUnresolvedVariable
+                window.searchTextChange(inputRef.current.value);
+            },
+            keyDownSearch: (e) => {
+                if (e.keyCode === 13) {
+                    functionRef.current.search()
+                }
+            }
+        }
+    )
     const redirectDOM = <Redirect to={redirectRef.current}/>
     if (redirect) {
         return redirectDOM
@@ -29,8 +38,8 @@ function NavigationBar(props) {
                 }
             }}/>
             <Input placeholder="input search text to search title" border={'1px solid'} borderColor={'black'}
-                   ref={inputRef}/>
-            <Button onClick={search}>Search</Button>
+                   ref={inputRef} onKeyDown={functionRef.current.keyDownSearch}/>
+            <Button onClick={functionRef.current.search}>Search</Button>
         </Box>
     );
 }

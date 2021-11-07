@@ -36,8 +36,8 @@ function NovelList() {
                         for (let i = 0; i < listRef.current.length; i++) {
                             if (listRef.current[i].id === rowID) {
                                 listRef.current[i] = data
+                                break;
                             }
-                            break;
                         }
                         updateListItemRef.current()
                     })
@@ -127,9 +127,10 @@ export function NovelListForSearch() {
                 } else if (data.status === 4) {
                     console.log('4')
                     getData().then(() => {
-                        console.log(listRef.current)
                         runningStateRef.current = false
                     })
+                } else {
+                    runningStateRef.current = false
                 }
             })
         }).catch(err => {
@@ -148,10 +149,11 @@ export function NovelListForSearch() {
 
     useMemo(() => {
         if (runningStateRef.current === false && searchText !== "") {
-            console.log(searchText)
             listRef.current = []
             runningStateRef.current = true
-            searchNovelRef.current(searchText)
+            fetch(window.serverURL + "search/stop", {method: "POST"}).then(() => {
+                searchNovelRef.current(searchText)
+            })
         }
     }, [searchText])
 

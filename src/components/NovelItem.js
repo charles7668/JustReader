@@ -1,6 +1,6 @@
 // noinspection JSUnresolvedVariable
 
-import React, {useContext, useEffect, useRef, useState} from "react";
+import React, {useContext, useEffect, useMemo, useRef, useState} from "react";
 import "./css/NovelItem.css";
 import {Redirect} from "react-router-dom";
 import LoadingPage from "./LoadingPage";
@@ -34,9 +34,7 @@ function NovelItem(props) {
             })
         }
     })
-    useEffect(() => {
-        setNovel(props.novelInformation)
-    }, [props.novelInformation])
+
     const uploadCover = () => {
         const input = document.createElement("input")
         input.type = "file"
@@ -73,6 +71,13 @@ function NovelItem(props) {
         }, () => {
         })
     }
+
+    useMemo(() => {
+        setNovel(props.novelInformation)
+        return () => {
+        }
+    }, [props.novelInformation])
+
     let redirectPath = "/chapters/" + novel.md5;
     const src = "data:image/png;base64," + novel.cover;
     const redirect = (
@@ -100,7 +105,7 @@ function NovelItem(props) {
                 </Menu>
             </Box>
             <div className="NovelInformation">
-                <p onClick={() => {
+                <p style={{color: "blue"}} onClick={() => {
                     setNovelView(true)
                 }}> {novel.name} </p>
                 <p>來源:{novel.source}</p>
@@ -121,8 +126,8 @@ function NovelItem(props) {
 export function NovelItemForSearch(props) {
     const [loading, setLoading] = useState(false)
     const [novel, setNovel] = useState({})
-    // noinspection JSUnusedLocalSymbols
-    const [isAlert, alertMessage, alertTitle, okAction, cancelAction, alertDialog, closeAlertDialog] = useAlertDialog()
+    const alert = useContext(AlertContext)
+    const [isAlert, alertMessage, alertTitle, okAction, cancelAction, , closeAlertDialog] = useAlertDialog()
     const functionRef = useRef({
         addNovelToShelf: (novel) => {
             setLoading(true)
@@ -139,8 +144,7 @@ export function NovelItemForSearch(props) {
                         setLoading(false)
                     })
                 } else {
-                    obj.data.then((data) => {
-                        console.log(data)
+                    obj.data.then(() => {
                         alert('complete')
                         setLoading(false)
                     })

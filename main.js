@@ -39,6 +39,7 @@ function createWindow() {
                         clearInterval(checkFile)
                         fs.readFile('server.json', readCallBack)
                     } else if (counter >= 10) {
+                        clearInterval(checkFile)
                         // noinspection JSIgnoredPromiseFromCall
                         dialog.showMessageBox(new BrowserWindow({
                             type: "error",
@@ -52,7 +53,7 @@ function createWindow() {
                         })
                     }
                     counter++;
-                }, 100)
+                }, 500)
             })
         }
     }

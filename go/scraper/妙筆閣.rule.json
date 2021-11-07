@@ -1,0 +1,64 @@
+{
+  "enable": true,
+  "source_url": "https://www.mbg.tw",
+  "source_name": "妙筆閣",
+  "request": {
+    "url": "https://www.mbg.tw/search.html",
+    "method": "POST",
+    "header": {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    "body": {
+      "searchkey": "{searchKey}"
+    },
+    "charset": "UTF-8"
+  },
+  "search_rule": [
+    {
+      "search_list": "#sitembox > dl",
+      "search_list_title": {
+        "selector": "h3 > a",
+        "regex": "(.*)[\n]$"
+      },
+      "search_list_author": {
+        "selector": ".book_other > a:nth-child(2)",
+        "regex": "(.*)[\n]$",
+        "content": "#text"
+      },
+      "search_list_information_url": {
+        "selector": "h3 > a",
+        "attribute": "href"
+      },
+      "novel_name": {
+        "selector": "h1",
+        "regex": "(.*)[\n]$"
+      },
+      "novel_author": {
+        "selector": ".booktitle > span > a",
+        "regex": "(.*)[\n]$"
+      },
+      "novel_brief": {
+        "selector": "#bookintro",
+        "content": "#text"
+      },
+      "novel_index": {
+        "selector": ".newrap > strong > a",
+        "attribute": "href"
+      },
+      "novel_cover": {
+        "selector": "#bookimg > img",
+        "attribute": "src"
+      },
+      "novel_index_chapter_name": {
+        "selector": "#readerlists > ul:nth-child(2) > li > a"
+      },
+      "novel_index_chapter_url": {
+        "selector": "#readerlists > ul:nth-child(2) > li > a",
+        "attribute": "href"
+      },
+      "novel_content": {
+        "selector": "#content > p"
+      }
+    }
+  ]
+}

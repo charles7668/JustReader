@@ -371,15 +371,8 @@ func stopSearchNovel(c *gin.Context) {
 	var result []Scraper.Novel
 	if Scraper.GetStatus() == Scraper.Processing {
 		Scraper.StopProcessing()
-		for {
-			if Scraper.GetStatus() == Scraper.ReadyToGet {
-				result = Scraper.GetSearchList()
-				break
-			}
-		}
-	} else if Scraper.GetStatus() == Scraper.ReadyToGet {
-		result = Scraper.GetSearchList()
 	}
+	result = Scraper.GetSearchList()
 	c.IndentedJSON(http.StatusOK, result)
 }
 
@@ -460,6 +453,10 @@ func addNovelFromRemote(c *gin.Context) {
 		return
 	}
 	information = Scraper.GetNovelInformation(information)
+	if information.IndexUrl == "" {
+		c.IndentedJSON(http.StatusBadRequest, Message{Status: ParamError, Message: "not found"})
+		return
+	}
 	chapters := Scraper.GetNovelChapters(information)
 	var resultChapters []novel.Chapter
 	for _, chapter := range chapters {
@@ -603,7 +600,8 @@ func main() {
 							    CreateTime text,
 							    MD5		   text,
 								Cover      text,
-								Detail     text
+								Detail     text,
+								Source	   text
 							)`
 		_, err = db.Exec(queryString)
 		if checkError(err) {

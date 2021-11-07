@@ -259,7 +259,7 @@ func GetSearchList() []Novel {
 	novelResults.Mutex.Lock()
 	result := novelResults.Novels
 	novelResults.Novels = nil
-	if status.runningState == ReadyToGet {
+	if status.runningState == ReadyToGet || status.runningState == Stopping {
 		status.mutex.Lock()
 		status.runningState = Ready
 		status.mutex.Unlock()
@@ -463,15 +463,10 @@ func getNovelsInformation(novelList []Novel, rule Rule) []Novel {
 func GetNovelInformation(novel Novel) Novel {
 	logger.Println("func enter : Scraper/GetNovelInformation")
 	defer logger.Println("func exit : Scraper/GetNovelInformation")
-	rules := getRules()
+	rule := getRule(novel.RuleName)
 	result := novel
-	for _, rule := range rules {
-		if rule.RuleName == novel.RuleName {
-			novels := getNovelsInformation([]Novel{novel}, rule)
-			result = novels[0]
-			break
-		}
-	}
+	novels := getNovelsInformation([]Novel{novel}, rule)
+	result = novels[0]
 	return result
 }
 
