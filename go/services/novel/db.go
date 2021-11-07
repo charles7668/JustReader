@@ -310,6 +310,7 @@ func getNovel(rowID int) (Information, error) {
 	return information, err
 }
 
+//updateChapters update chapters
 func updateChapters(rowID int, chapters []Chapter) error {
 	queryString := fmt.Sprintf("SELECT MD5 FROM NovelInformation WHERE ROWID='%d'", rowID)
 	row := db.QueryRow(queryString)
@@ -334,6 +335,11 @@ func updateChapters(rowID int, chapters []Chapter) error {
 		}
 		queryString += str
 	}
+	_, err = db.Exec(queryString)
+	if checkError(err) {
+		return err
+	}
+	queryString = fmt.Sprintf("UPDATE 'NovelInformation' SET LastChapter='%s' WHERE ROWID='%d'", chapters[len(chapters)-1].ChapterName, rowID)
 	_, err = db.Exec(queryString)
 	if checkError(err) {
 		return err

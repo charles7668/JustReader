@@ -29,6 +29,7 @@ function NovelItem(props) {
                     setLoading(false)
                 } else {
                     alert('update success')
+                    props.updateInformation(rowID)
                     setLoading(false)
                 }
             })
