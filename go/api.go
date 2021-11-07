@@ -16,6 +16,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -565,11 +566,37 @@ func useNetImageByID(c *gin.Context) {
 }
 
 var StaticFilePath = "../build"
+var BuildMode = "DEBUG"
 
 //main entry point
 func main() {
 	date := time.Now().Format("060102")
-	logWriter, err := os.OpenFile("./log"+date+".log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	logPath := "./log" + date + ".log"
+	dbPath := "novel-reader.db"
+	if //goland:noinspection GoBoolExpressions
+	BuildMode == "RELEASE" {
+		userCacheDir, err := os.UserCacheDir()
+		if err == nil {
+			programPath := filepath.Join(userCacheDir, "novel-reader")
+			logDirPath := filepath.Join(programPath, "log")
+			_, err = os.Stat(programPath)
+			if os.IsNotExist(err) {
+				err = os.MkdirAll(logDirPath, 0666)
+				if err == nil {
+					logPath = filepath.Join(logDirPath, "log"+date+".log")
+					dbPath = filepath.Join(programPath, dbPath)
+					logPath = strings.ReplaceAll(logPath, "\\", "\\\\")
+					dbPath = strings.ReplaceAll(dbPath, "\\", "\\\\")
+				}
+			} else {
+				logPath = filepath.Join(logDirPath, "log"+date+".log")
+				dbPath = filepath.Join(programPath, dbPath)
+				logPath = strings.ReplaceAll(logPath, "\\", "\\\\")
+				dbPath = strings.ReplaceAll(dbPath, "\\", "\\\\")
+			}
+		}
+	}
+	logWriter, err := os.OpenFile(logPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	logger = log.New(logWriter, "", log.Ldate|log.Ltime)
 	defer func(logWriter *os.File) {
 		err = logWriter.Close()
@@ -577,9 +604,9 @@ func main() {
 			return
 		}
 	}(logWriter)
-	_, _ = file_operation.CreateFileIfNotExist("novel-reader.db")
+	_, _ = file_operation.CreateFileIfNotExist(dbPath)
 	logger.Println("open novel-reader.db")
-	db, err := sql.Open("sqlite3", "novel-reader.db")
+	db, err := sql.Open("sqlite3", dbPath)
 	if checkError(err) {
 		return
 	} else {

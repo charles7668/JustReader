@@ -52,7 +52,7 @@ const buildElectron = () => {
 
 const buildGoApp = () => {
     console.log('start build go app')
-    exec("set GIN_MODE=release && cd go && go build -o server.exe -ldflags=\"-X 'main.StaticFilePath=resources/static'\"", (error) => {
+    exec("set GIN_MODE=release && cd go && go build -o server.exe -ldflags=\"-X 'main.StaticFilePath=resources/static' -X 'main.BuildMode=RELEASE'\"", (error) => {
         if (error !== null) {
             console.log(`exec error: ${error}`);
         }
