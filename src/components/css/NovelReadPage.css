@@ -38,7 +38,6 @@
 }
 
 .NovelReadPage .NovelContent {
-    font-size: 32px;
     width: 100%;
     flex: 1;
     overflow-y: auto;

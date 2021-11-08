@@ -231,7 +231,8 @@ func addImageByID(c *gin.Context) {
 }
 
 func updateSetting(c *gin.Context) {
-	logger.Println("func enter : main updateSetting")
+	logger.Println("func enter : main/updateSetting")
+	defer logger.Println("func exit : main/updateSetting")
 	body := c.Request.Body
 	bodyData, err := ioutil.ReadAll(body)
 	if err != nil {

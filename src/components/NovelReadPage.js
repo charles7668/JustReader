@@ -3,13 +3,25 @@
 import React, {useContext, useEffect, useMemo, useRef, useState} from "react";
 import {Redirect} from "react-router";
 import "./css/NovelReadPage.css";
-import {Box, Center, IconButton, Menu, MenuButton, MenuItem, MenuList} from "@chakra-ui/react";
+import {
+    Box,
+    Center,
+    IconButton,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuList,
+    Slider,
+    SliderFilledTrack, SliderThumb,
+    SliderTrack, Stack, Switch
+} from "@chakra-ui/react";
 import {AiOutlineArrowLeft, BsFillFileTextFill, DiAptana} from "react-icons/all";
 import {SketchPicker} from "react-color";
 import {AlertContext, SettingContext} from "../App";
 import {ArrowLeftIcon, ArrowRightIcon} from '@chakra-ui/icons'
 import {FixedSizeList} from 'react-window';
 
+const OpenCC = require('opencc-js');
 const ChapterIndexContext = React.createContext(0)
 
 function NovelReadPage(props) {
@@ -23,6 +35,8 @@ function NovelReadPage(props) {
     const [pickColor, setPickColor] = useState('#000')
     const [viewChapter, setViewChapter] = useState({title: '', content: 'loading'})
     const [contentItem, setContentItem] = useState(undefined)
+    const [, , , fontSize, setFontSize] = useFontSizeSelect(Number(settingContext.reading_font_size))
+    const [zhView, setZhView] = useState(Boolean(settingContext.reading_tw))
     const novel = useRef({information: {}, chapters: [], titleList: []})
     const numberOfChapters = useRef(0)
     const updateColor = useRef()
@@ -50,7 +64,7 @@ function NovelReadPage(props) {
                         })
                         return
                     }
-                    obj.data.then(data => {
+                    obj.data.then(async (data) => {
                         setViewChapter({
                             title: data.chapter_name,
                             content: data.chapter_content
@@ -86,6 +100,8 @@ function NovelReadPage(props) {
         updateReadingRef.current().then(() => {
             settingContext.reading_background_color = backgroundColor
             settingContext.reading_font_color = fontColor
+            settingContext.reading_font_size = fontSize.toString()
+            settingContext.reading_tw = zhView.toString()
             const options = {
                 method: 'POST',
                 body: JSON.stringify(settingContext),
@@ -113,16 +129,24 @@ function NovelReadPage(props) {
             novel.current.information.current_chapter = viewChapter.title
             // noinspection JSIgnoredPromiseFromCall
             updateReadingRef.current()
+            const converter = OpenCC.Converter({from: 'cn', to: 'tw'});
             setContentItem(viewChapter.content.split('\n').map(function (s, index) {
                 s = s.replace(/^[\t　 \n]*/, '')
                 s = "　　" + s
+                if (zhView) {
+                    s = converter(s)
+                }
                 return <p key={index}>{s}</p>
             }))
             if (contentRef.current !== undefined) {
                 contentRef.current.scrollTop = 0
             }
+        } else {
+            setContentItem(viewChapter.content.split('\n').map(function (s, index) {
+                return <p key={index}>{s}</p>
+            }))
         }
-    }, [viewChapter])
+    }, [viewChapter, zhView])
 
     useEffect(() => {
         const options = {
@@ -181,7 +205,7 @@ function NovelReadPage(props) {
                 <Center flex={'1'} margin={'0'} padding={'0'} overflow={"hidden"}><h1
                     className={"TitleName"}>{viewChapter.title}</h1>
                 </Center>
-                <Box className="PageChangeBar" position={"relative"}>
+                <Box className="PageChangeBar" position={"relative"} fontSize={"24px"}>
                     <Menu closeOnSelect={false} onClose={() => {
                         setBackgroundColorPick(false);
                         setFontColorPick(false);
@@ -192,9 +216,6 @@ function NovelReadPage(props) {
                             icon={<DiAptana/>}
                             variant="ghost"
                             height="100%"
-                            // _hover={{bg: {backgroundColor}}} _focus={{bg: {backgroundColor}}}
-                            _hover={{}} _focus={{}}
-                            // _expanded={{bg: {backgroundColor}}}
                         />
                         <MenuList backgroundColor={backgroundColor} color={fontColor}>
                             <MenuItem onClick={() => {
@@ -204,10 +225,7 @@ function NovelReadPage(props) {
                                 }
                                 setFontColorPick(false)
                                 setBackgroundColorPick(!backgroundColorPick)
-                            }}
-                                      _focus={{bg: {backgroundColor}}}
-                                      _hover={{bg: {backgroundColor}}}
-                            >
+                            }}>
                                 background color
                             </MenuItem>
                             <MenuItem onClick={() => {
@@ -217,14 +235,36 @@ function NovelReadPage(props) {
                                 }
                                 setBackgroundColorPick(false)
                                 setFontColorPick(!fontColorPick)
-                            }}
-                                      _hover={{bg: {backgroundColor}}}
-                                      _focus={{bg: {backgroundColor}}}>
+                            }}>
                                 font color
+                            </MenuItem>
+                            <MenuItem width={"100%"}>
+                                <Stack width={"100%"}>
+                                    <p>Font Size ({fontSize})</p>
+                                    <Slider defaultValue={fontSize} min={12} max={60}
+                                            step={1}
+                                            width={"100%"}
+                                            onChangeEnd={(val) => setFontSize(val)}>
+                                        <SliderTrack bg="red.100">
+                                            <Box position="relative" right={10}/>
+                                            <SliderFilledTrack bg="tomato"/>
+                                        </SliderTrack>
+                                        <SliderThumb boxSize={6}/>
+                                    </Slider>
+                                </Stack>
+                            </MenuItem>
+                            <MenuItem>
+                                <Stack direction={"row"}>
+                                    <p>繁體顯示</p>
+                                    <Switch isChecked={zhView} onChange={() => {
+                                        setZhView(!zhView)
+                                    }}/>
+                                </Stack>
                             </MenuItem>
                             {(fontColorPick || backgroundColorPick) &&
                             <SketchPicker color={pickColor} onChange={color => updateColor.current(color.hex)}
                                           className={"ColorPicker"}/>}
+
                         </MenuList>
                     </Menu>
                     <ChapterIndexContext.Provider value={chapterIndex}>
@@ -254,7 +294,7 @@ function NovelReadPage(props) {
             </Box>
             <hr/>
             <Box className="NovelContent" ref={node => contentRef.current = node} paddingLeft={'5px'}
-                 paddingRight={'5px'}>
+                 paddingRight={'5px'} fontSize={`${fontSize}px`}>
                 {contentItem}
             </Box>
         </Box>
@@ -348,6 +388,21 @@ function IndexMenu(props) {
                                         itemCount={memos.chapters.length}>{row.current}</FixedSizeList>}
         </Box>
     )
+}
+
+function useFontSizeSelect(initFontSize) {
+    const [selectFontSize, setSelectFontSize] = useState(false)
+    const [fontSize, setFontSize] = useState(initFontSize)
+
+    function openSelectFontSize() {
+        setSelectFontSize(true)
+    }
+
+    function closeSelectFontSize() {
+        setSelectFontSize(false)
+    }
+
+    return [selectFontSize, openSelectFontSize, closeSelectFontSize, fontSize, setFontSize]
 }
 
 export default NovelReadPage;
