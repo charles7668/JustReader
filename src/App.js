@@ -3,7 +3,6 @@ import React, {useEffect, useRef, useState} from "react";
 import {HashRouter, Route} from "react-router-dom";
 import MainPage from "./components/MainPage";
 import NovelReadPage from "./components/NovelReadPage";
-import "bootstrap/dist/css/bootstrap.min.css";
 import Alert, {useAlert} from "./components/Alert"
 import SearchPage from "./components/SearchPage";
 
