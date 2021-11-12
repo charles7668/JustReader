@@ -1,7 +1,7 @@
 // import { button } from "react-bootstrap";
 import React, {useContext, useRef, useState} from "react";
 import "./css/NavigationBar.css";
-import {Button} from "react-bootstrap";
+import {Button} from "@chakra-ui/react";
 import {Box, IconButton, Input, Menu, MenuButton, MenuItem, MenuList} from "@chakra-ui/react";
 import {HamburgerIcon} from "@chakra-ui/icons";
 import LoadingPage from "./LoadingPage";

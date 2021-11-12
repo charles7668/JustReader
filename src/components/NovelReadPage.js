@@ -63,7 +63,7 @@ function NovelReadPage(props) {
                             content: "載入失敗 , " + obj.data.message
                         })
                         return
-                    }
+                }
                     obj.data.then(async (data) => {
                         setViewChapter({
                             title: data.chapter_name,

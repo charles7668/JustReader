@@ -106,13 +106,14 @@ function NovelItem(props) {
                 </Menu>
             </Box>
             <div className="NovelInformation">
-                <p style={{color: "blue"}} onClick={() => {
+                <p style={{color: "#DBB256"}} onClick={() => {
                     setNovelView(true)
                 }}> {novel.name} </p>
-                <p>來源:{novel.source}</p>
-                <p>{novel.current_chapter}</p>
-                <p>{novel.last_chapter}</p>
-                <p>簡介:</p>
+                <p><span style={{color: "#DBB256"}}>作者：</span>{novel.author}</p>
+                <p><span style={{color: "#DBB256"}}>來源：</span>{novel.source}</p>
+                <p><span style={{color: "#DBB256"}}>目前：</span>{novel.current_chapter}</p>
+                <p><span style={{color: "#DBB256"}}>最新：</span>{novel.last_chapter}</p>
+                <p>簡介：</p>
                 <p className="NovelBrief"
                    dangerouslySetInnerHTML={{__html: novel.brief?.replaceAll('\n', '<br/>')}}/>
             </div>
@@ -176,11 +177,10 @@ export function NovelItemForSearch(props) {
                 </Menu>
             </Box>
             <div className="NovelInformation">
-                <p onClick={() => {
-                    //todo view list
-                }}> {novel.title} </p>
-                <p>來源：{novel.source_name}</p>
-                <p>簡介:</p>
+                <p style={{color: "#DBB256"}}> {novel.title} </p>
+                <p><span style={{color: "#DBB256"}}>作者：</span>{novel.author}</p>
+                <p><span style={{color: "#DBB256"}}>來源：</span>{novel.source_name}</p>
+                <p><span style={{color: "#DBB256"}}>簡介：</span></p>
                 <p className="NovelBrief"
                    dangerouslySetInnerHTML={{__html: novel.brief?.replaceAll('\n', '<br/>')}}/>
             </div>

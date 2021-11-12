@@ -1,5 +1,4 @@
 import {
-    Box,
     Button, Image, Modal,
     ModalBody, ModalContent,
     ModalFooter,
@@ -8,8 +7,8 @@ import {
     useDisclosure
 } from "@chakra-ui/react";
 import {useContext, useEffect, useRef, useState} from "react";
-import LoadingPage from "./LoadingPage";
 import {AlertContext} from "../App";
+import HorizonLoading from "./HorizonLoading";
 
 function CoverSelect(props) {
     let {isOpen} = useDisclosure()
@@ -111,19 +110,17 @@ function CoverSelect(props) {
         <Modal isOpen={isOpen} onClose={props.onClose} closeOnOverlayClick={false} scrollBehavior={"inside"}>
             <ModalOverlay/>
             <ModalContent>
-                <ModalHeader>封面選擇</ModalHeader>
+                <ModalHeader>封面選擇
+                    {isLoading && <HorizonLoading/>}
+                </ModalHeader>
                 <ModalBody>
-                    {isLoading && <LoadingPage height={"100px"} backgroundColor={"transparent"} text="loading"/>}
-                    {!isLoading &&
                     <RadioGroup position={"relative"}>
                         <Stack>
                             {radioList}
                         </Stack>
                     </RadioGroup>
-                    }
                 </ModalBody>
                 <ModalFooter>
-                    {isLoading && <Box paddingRight={"5px"}>Loading...</Box>}
                     <Button isLoading={submitLoading} colorScheme="blue"
                             onClick={() => onSubmitRef.current(props.rowID)}
                             marginRight={"5px"}>確定</Button>

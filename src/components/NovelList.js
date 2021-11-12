@@ -1,8 +1,9 @@
 import NovelItem, {NovelItemForSearch} from "./NovelItem";
 import React, {useEffect, useMemo, useRef, useState} from "react";
 import './css/NovelList.css'
-import {HStack} from "@chakra-ui/react";
+import {Center, HStack, VStack} from "@chakra-ui/react";
 import CoverSelect from "./CoverSelect";
+import HorizonLoading from "./HorizonLoading";
 
 function NovelList() {
     const [searchText, setSearchText] = useState('')
@@ -85,6 +86,7 @@ function NovelList() {
 export function NovelListForSearch() {
     const [searchText, setSearchText] = useState('')
     const [listItem, setListItem] = useState(undefined)
+    const [loading, setLoading] = useState(false)
     const listRef = useRef([])
     const runningStateRef = useRef(false)
     const searchNovelRef = useRef((text) => {
@@ -115,6 +117,7 @@ export function NovelListForSearch() {
             if (obj.status !== 200) {
                 alert(obj.data.message)
                 runningStateRef.current = false
+                setLoading(false)
                 return
             }
             obj.data.then((data) => {
@@ -125,17 +128,19 @@ export function NovelListForSearch() {
                         }, 1000)
                     })
                 } else if (data.status === 4) {
-                    console.log('4')
                     getData().then(() => {
                         runningStateRef.current = false
+                        setLoading(false)
                     })
                 } else {
                     runningStateRef.current = false
+                    setLoading(false)
                 }
             })
         }).catch(err => {
             alert(err)
             runningStateRef.current = false
+            setLoading(false)
         })
     })
     useEffect(() => {
@@ -152,16 +157,27 @@ export function NovelListForSearch() {
             listRef.current = []
             runningStateRef.current = true
             fetch(window.serverURL + "search/stop", {method: "POST"}).then(() => {
+                setLoading(true)
                 searchNovelRef.current(searchText)
             })
         }
     }, [searchText])
 
-    return <HStack className="NovelList" spacing="20px" wrap="wrap" alignItems={'start'} alignContent={'flex-start'}
-                   paddingLeft={'10px'} paddingRight={'10px'}>{listItem}
-        <div className="LastElement"/>
-        />
-    < /HStack>;
+    return (
+        <VStack width={"100%"}>
+            {loading &&
+            <Center width={"100%"} paddingTop={"3px"}>
+                <HorizonLoading/>
+            </Center>
+            }
+            <HStack width={"100%"} className="NovelList" spacing="20px" wrap="wrap" alignItems={'start'}
+                    alignContent={'flex-start'}
+                    paddingLeft={'10px'} paddingRight={'10px'}>{listItem}
+                <div className="LastElement"/>
+                />
+            < /HStack>
+        </VStack>
+    );
 }
 
 export default NovelList;

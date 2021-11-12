@@ -1,0 +1,19 @@
+@keyframes stretch {
+    0% {
+        width: 0;
+    }
+    50% {
+        width: 100%;
+    }
+    100% {
+        width: 0;
+    }
+}
+
+.HorizonLoading {
+    width: 100%;
+}
+
+.HorizonLoading > .HorizonLoadingBox {
+    animation: stretch 1.5s linear infinite;
+}
