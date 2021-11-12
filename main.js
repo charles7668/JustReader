@@ -3,7 +3,7 @@ const fs = require('fs');
 const {spawn} = require('child_process')
 
 let server_process
-
+app.commandLine.appendSwitch("disable-http-cache"); //disable cache
 function createWindow() {
     const win = new BrowserWindow({width: 500, height: 800, autoHideMenuBar: true})
     const readCallBack = (err, data) => {
