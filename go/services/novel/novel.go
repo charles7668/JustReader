@@ -107,6 +107,7 @@ func getNovelInformation(path string) (Novel, error) {
 	keywordMap := make(map[string]*string)
 	keywordMap["作者"] = &novelInformation.Author
 	keywordMap["内容简介"] = &novelInformation.Brief
+	keywordMap["內容簡介"] = &novelInformation.Brief
 	keywordMap["title"] = &novelInformation.Name
 	counter := 0
 	var docsKeyword string
@@ -149,12 +150,12 @@ func getNovelInformation(path string) (Novel, error) {
 						break
 					}
 				}
-				if len(split) >= 2 {
+				if len(split) >= 2 && !strings.HasPrefix(s, breakKeywords) {
 					if *keywordMap["title"] == "" {
 						temp := strings.Split(split[0], " ")
 						*keywordMap["title"] = temp[0]
 						if len(temp) > 1 {
-							contentKeyword = split[1]
+							contentKeyword = temp[1]
 						}
 					} else {
 						contentKeyword = split[0]
