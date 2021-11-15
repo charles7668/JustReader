@@ -5,7 +5,7 @@ import "./MainPage.css";
 
 function MainPage() {
     useEffect(() => {
-        document.title = "Home"
+        document.title = "Novels"
         return () => {
         }
     }, [])

@@ -578,7 +578,7 @@ func main() {
 	BuildMode == "RELEASE" {
 		userCacheDir, err := os.UserCacheDir()
 		if err == nil {
-			programPath := filepath.Join(userCacheDir, "novel-reader")
+			programPath := filepath.Join(userCacheDir, "JustReader")
 			logDirPath := filepath.Join(programPath, "log")
 			_, err = os.Stat(programPath)
 			if os.IsNotExist(err) {
@@ -596,6 +596,8 @@ func main() {
 				dbPath = strings.ReplaceAll(dbPath, "\\", "\\\\")
 			}
 		}
+		//set gin release mode
+		gin.SetMode(gin.ReleaseMode)
 	}
 	logWriter, err := os.OpenFile(logPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	logger = log.New(logWriter, "", log.Ldate|log.Ltime)

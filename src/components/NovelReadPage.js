@@ -63,7 +63,7 @@ function NovelReadPage(props) {
                             content: "載入失敗 , " + obj.data.message
                         })
                         return
-                }
+                    }
                     obj.data.then(async (data) => {
                         setViewChapter({
                             title: data.chapter_name,
@@ -177,6 +177,7 @@ function NovelReadPage(props) {
             novel.current = {information: tempNovel, chapters: data, titleList: data.map(item => item.chapter_name)}
             setChapterIndex(index)
             functionRef.current.updateViewChapter(data[index], novel.current.information.id)
+            document.title = tempNovel.name
             // setViewChapter({title: data[index].chapter_name, content: data[index].chapter_content})
             completeRef.current = true
         })
@@ -184,10 +185,6 @@ function NovelReadPage(props) {
             getChapter().then(r => r)
         })
     }, [alert, props.location.state])
-
-    useEffect(() => {
-        document.title = "Reading"
-    }, [])
 
     const goBackRedirect = <Redirect to="/"/>;
     //if refresh page then back to home

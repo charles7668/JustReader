@@ -9,8 +9,8 @@ const buildElectron = () => {
 
         win: ['nsis', 'portable'],  // nsis . portable
         config: {
-            "appId": "com.electron.novel_reader",
-            "productName": "novel-reader", // 應用程式名稱 ( 顯示在應用程式與功能 )
+            "appId": "com.electron.just_reader",
+            "productName": "JustReader", // 應用程式名稱 ( 顯示在應用程式與功能 )
             "directories": {
                 "output": "build_electron"
             },
