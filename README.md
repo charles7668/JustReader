@@ -9,6 +9,11 @@
 - [x] 閱讀頁面 顏色,字體大小 可自定義
 - [x] 簡繁切換
 - [x] 可使用瀏覽器閱讀
+- [ ] 目前亦可自定爬取的網站但尚未完善,可參考程式目錄下`scraper`的檔案建立爬取規則
+
+# 備份設定
+
+備份以下檔案`C:/users/username/AppData/Local/JustReader/novel-reader.db`
 
 # 注意
 
