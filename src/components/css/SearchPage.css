@@ -35,7 +35,7 @@
     overflow-y: hidden;
 }
 
-.SearchPage > .MainPanel > .NovelList {
+.SearchPage .NovelList {
     overflow-y: auto;
     flex: 1;
 }
