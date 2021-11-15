@@ -213,6 +213,7 @@ function NovelReadPage(props) {
                             icon={<DiAptana/>}
                             variant="ghost"
                             height="100%"
+                            backgroundColor={backgroundColor} color={fontColor}
                         />
                         <MenuList backgroundColor={backgroundColor} color={fontColor}>
                             <MenuItem onClick={() => {
