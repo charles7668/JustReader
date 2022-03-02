@@ -4,7 +4,7 @@
 
 # Feature
 
-- [x] 載入txt格式的小說
+- [x] 載入 txt 格式的小說
 - [x] 爬取特定網站的小說(目前支援 飄天,妙筆閣)
 - [x] 閱讀頁面 顏色,字體大小 可自定義
 - [x] 簡繁切換
@@ -17,7 +17,7 @@
 
 # 注意
 
-1. 目前使用 port 為 8088 , 如此port使用中則無法正常使用
+1. 目前使用 port 為 8088 , 如此 port 使用中則無法正常使用
 
 # Requirement
 
@@ -27,10 +27,10 @@
 # build app
 
 1. install dependency
-    1. run `npm install`
-    2. cd to go folder
-    3. run go mod tiny
-2. run `node build.js` in terminal , output folder is `build_electron`
+   1. run `npm install`
+   2. cd to go folder
+   3. run `go get` to download all module
+   4. run `node build.js` in terminal , output folder is `build_electron`
 
 [React build](React.md)  
 [Go build](go%20build.md)
